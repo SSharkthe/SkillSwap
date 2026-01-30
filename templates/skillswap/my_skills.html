@@ -1,0 +1,72 @@
+{% extends 'skillswap/base.html' %}
+
+{% block title %}My Skills · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-semibold">My Skills</h2>
+        <p class="text-muted mb-0">Showcase what you offer and what you want to learn.</p>
+    </div>
+    <a href="{% url 'skillswap:user-skill-add' %}" class="btn btn-primary">Add Skill</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-soft h-100">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">Offers</h5>
+            </div>
+            <div class="card-body">
+                {% if offers %}
+                    <ul class="list-group list-group-flush">
+                        {% for item in offers %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ item.skill.name }}</strong>
+                                    <span class="badge text-bg-primary-subtle text-primary ms-2">{{ item.level }}</span>
+                                    <div class="text-muted small">{{ item.skill.category }}</div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'skillswap:user-skill-edit' item.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    <a href="{% url 'skillswap:user-skill-delete' item.pk %}" class="btn btn-sm btn-outline-danger">Remove</a>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No offers yet. Add a skill you can teach.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-soft h-100">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">Wants</h5>
+            </div>
+            <div class="card-body">
+                {% if wants %}
+                    <ul class="list-group list-group-flush">
+                        {% for item in wants %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ item.skill.name }}</strong>
+                                    <span class="badge text-bg-secondary-subtle text-secondary ms-2">{{ item.level }}</span>
+                                    <div class="text-muted small">{{ item.skill.category }}</div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'skillswap:user-skill-edit' item.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    <a href="{% url 'skillswap:user-skill-delete' item.pk %}" class="btn btn-sm btn-outline-danger">Remove</a>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No wants yet. Add a skill you want to learn.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

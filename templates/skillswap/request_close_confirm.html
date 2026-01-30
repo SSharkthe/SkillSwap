@@ -1,0 +1,17 @@
+{% extends 'skillswap/base.html' %}
+
+{% block title %}Close Request · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-soft">
+    <div class="card-body">
+        <h3 class="fw-semibold">Close Request</h3>
+        <p class="text-muted">Are you sure you want to close "{{ request_obj.title }}"?</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Close Request</button>
+            <a href="{{ request_obj.get_absolute_url }}" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

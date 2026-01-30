@@ -1,0 +1,57 @@
+{% extends 'skillswap/base.html' %}
+
+{% block title %}{{ action }} Skill · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-soft">
+    <div class="card-body">
+        <h3 class="fw-semibold mb-3">{{ action }} Skill</h3>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label" for="{{ form.skill.id_for_label }}">Select Existing Skill</label>
+                {{ form.skill }}
+                {% for error in form.skill.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.type.id_for_label }}">Type</label>
+                    {{ form.type }}
+                    {% for error in form.type.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.level.id_for_label }}">Level</label>
+                    {{ form.level }}
+                    {% for error in form.level.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                </div>
+            </div>
+            <hr class="my-4">
+            <h6 class="text-muted">Or add a new skill</h6>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.skill_name.id_for_label }}">Skill name</label>
+                    {{ form.skill_name }}
+                    {% for error in form.skill_name.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.skill_category.id_for_label }}">Category</label>
+                    {{ form.skill_category }}
+                    {% for error in form.skill_category.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="{{ form.skill_description.id_for_label }}">Description</label>
+                    {{ form.skill_description }}
+                    {% for error in form.skill_description.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                </div>
+            </div>
+            {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}<div class="text-danger small mt-2">{{ error }}</div>{% endfor %}
+            {% endif %}
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">{{ action }}</button>
+                <a href="{% url 'skillswap:my-skills' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

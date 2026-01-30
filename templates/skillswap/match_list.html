@@ -1,0 +1,41 @@
+{% extends 'skillswap/base.html' %}
+
+{% block title %}My Matches · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-semibold">My Matches</h2>
+        <p class="text-muted mb-0">Track invitations and learning partnerships.</p>
+    </div>
+</div>
+
+{% if matches %}
+    <div class="card border-0 shadow-soft">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Request</th>
+                        <th>Partner</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for match in matches %}
+                    <tr>
+                        <td>{{ match.request.title }}</td>
+                        <td>{% if match.requester == user %}{{ match.partner.username }}{% else %}{{ match.requester.username }}{% endif %}</td>
+                        <td><span class="badge status-badge status-{{ match.status }}">{{ match.status|title }}</span></td>
+                        <td class="text-end"><a href="{{ match.get_absolute_url }}" class="btn btn-sm btn-outline-primary">Details</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-info">No matches yet. Explore requests to start collaborating.</div>
+{% endif %}
+{% endblock %}

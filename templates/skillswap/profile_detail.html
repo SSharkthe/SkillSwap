@@ -1,0 +1,21 @@
+{% extends 'skillswap/base.html' %}
+
+{% block title %}Profile · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-soft">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h3 class="fw-semibold">{{ profile.user.get_full_name|default:profile.user.username }}</h3>
+                <p class="text-muted mb-2">{{ profile.preferred_mode|title }} · {{ profile.location|default:'Location not set' }}</p>
+                <p>{{ profile.bio|default:'No bio yet.' }}</p>
+                <p class="text-muted"><strong>Availability:</strong> {{ profile.availability|default:'Not shared yet.' }}</p>
+            </div>
+            {% if profile.user == user %}
+                <a href="{% url 'skillswap:profile-edit' %}" class="btn btn-outline-primary">Edit Profile</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

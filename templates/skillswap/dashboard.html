@@ -1,0 +1,125 @@
+{% extends 'skillswap/base.html' %}
+
+{% block title %}Dashboard · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-semibold">Dashboard</h2>
+        <p class="text-muted mb-0">Welcome back, {{ user.first_name|default:user.username }}. Keep your learning momentum going.</p>
+    </div>
+    <a href="{% url 'skillswap:profile-edit' %}" class="btn btn-outline-primary">Edit Profile</a>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-soft h-100">
+            <div class="card-body">
+                <h6 class="text-muted">Profile</h6>
+                <p class="fw-semibold mb-1">{{ user.get_full_name|default:user.username }}</p>
+                <p class="text-muted mb-2">{{ profile.preferred_mode|title }} · {{ profile.location|default:'Location not set' }}</p>
+                <p class="small">{{ profile.bio|default:'Add a short bio to help others understand your learning goals.' }}</p>
+                <a href="{% url 'skillswap:profile-detail' user.username %}" class="btn btn-sm btn-outline-primary">View Profile</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-soft h-100">
+            <div class="card-body">
+                <h6 class="text-muted">Skills</h6>
+                <p class="fw-semibold">Offers: {{ offers|length }} · Wants: {{ wants|length }}</p>
+                <p class="text-muted small">Showcase what you can teach and what you want to learn.</p>
+                <a href="{% url 'skillswap:my-skills' %}" class="btn btn-sm btn-outline-primary">Manage Skills</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-soft h-100">
+            <div class="card-body">
+                <h6 class="text-muted">Requests</h6>
+                <p class="fw-semibold">{{ requests|length }} Active</p>
+                <p class="text-muted small">Track your learning requests and close them when complete.</p>
+                <a href="{% url 'skillswap:my-requests' %}" class="btn btn-sm btn-outline-primary">View Requests</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-soft h-100">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">My Skills</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="text-muted">Offers</h6>
+                {% if offers %}
+                    <ul class="list-group list-group-flush">
+                        {% for skill in offers %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ skill.skill.name }}</strong>
+                                    <span class="badge text-bg-primary-subtle text-primary ms-2">{{ skill.level }}</span>
+                                </div>
+                                <span class="text-muted small">{{ skill.skill.category }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No offers yet. Add one to start mentoring.</p>
+                {% endif %}
+                <h6 class="text-muted mt-4">Wants</h6>
+                {% if wants %}
+                    <ul class="list-group list-group-flush">
+                        {% for skill in wants %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ skill.skill.name }}</strong>
+                                    <span class="badge text-bg-secondary-subtle text-secondary ms-2">{{ skill.level }}</span>
+                                </div>
+                                <span class="text-muted small">{{ skill.skill.category }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No wants yet. Add a learning goal.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-soft h-100">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">My Matches</h5>
+            </div>
+            <div class="card-body">
+                {% if matches %}
+                    <ul class="list-group list-group-flush">
+                        {% for match in matches|slice:":5" %}
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>{{ match.request.title }}</strong>
+                                        <div class="text-muted small">
+                                            Partner:
+                                            {% if match.requester == user %}
+                                                {{ match.partner.username }}
+                                            {% else %}
+                                                {{ match.requester.username }}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <span class="badge status-badge status-{{ match.status }}">{{ match.status|title }}</span>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No matches yet. Explore requests and send an invite.</p>
+                {% endif %}
+                <a href="{% url 'skillswap:match-list' %}" class="btn btn-sm btn-outline-primary mt-3">View All Matches</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

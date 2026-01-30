@@ -1,0 +1,95 @@
+{% extends 'skillswap/base.html' %}
+
+{% block title %}SkillSwap · Campus Skill Exchange{% endblock %}
+
+{% block content %}
+<div class="row align-items-center g-5 mb-5">
+    <div class="col-lg-6">
+        <span class="badge text-bg-primary-subtle text-primary">Campus Skill Exchange</span>
+        <h1 class="display-5 fw-semibold mt-3">Learn together. Share what you know.</h1>
+        <p class="lead text-muted">SkillSwap helps students and staff connect for peer learning, tutoring, and collaborative growth. Offer your strengths, request the skills you want, and match with trusted partners.</p>
+        <div class="d-flex gap-2">
+            {% if user.is_authenticated %}
+                <a href="{% url 'skillswap:dashboard' %}" class="btn btn-primary btn-lg">Go to Dashboard</a>
+                <a href="{% url 'skillswap:explore-requests' %}" class="btn btn-outline-primary btn-lg">Explore Requests</a>
+            {% else %}
+                <a href="{% url 'skillswap:register' %}" class="btn btn-primary btn-lg">Get Started</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">Login</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-soft border-0">
+            <div class="card-body">
+                <h5 class="card-title">Community Snapshot</h5>
+                <div class="d-flex justify-content-between mt-4">
+                    <div>
+                        <p class="text-muted mb-1">Members</p>
+                        <h3 class="fw-semibold">{{ member_count }}</h3>
+                    </div>
+                    <div>
+                        <p class="text-muted mb-1">Skills Listed</p>
+                        <h3 class="fw-semibold">{{ skill_count }}</h3>
+                    </div>
+                    <div>
+                        <p class="text-muted mb-1">Active Requests</p>
+                        <h3 class="fw-semibold">{{ recent_requests|length }}</h3>
+                    </div>
+                </div>
+                <p class="text-muted mt-4 mb-0">Build your profile and join the learning exchange.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-soft">
+            <div class="card-body">
+                <h5 class="card-title">Offer Skills</h5>
+                <p class="text-muted">List the areas where you can mentor others and set your availability.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-soft">
+            <div class="card-body">
+                <h5 class="card-title">Request Learning</h5>
+                <p class="text-muted">Create focused requests tied to a skill and schedule preference.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-soft">
+            <div class="card-body">
+                <h5 class="card-title">Match & Grow</h5>
+                <p class="text-muted">Send invitations, confirm matches, and track progress together.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if recent_requests %}
+<div class="mt-5">
+    <h4 class="fw-semibold">Recent Requests</h4>
+    <div class="row g-4 mt-1">
+        {% for request in recent_requests %}
+            <div class="col-md-4">
+                <div class="card border-0 shadow-soft h-100">
+                    <div class="card-body">
+                        <h6 class="fw-semibold">{{ request.title }}</h6>
+                        <p class="text-muted mb-2">{{ request.skill.name }} · {{ request.skill.category }}</p>
+                        <p class="small text-muted">{{ request.description|truncatechars:120 }}</p>
+                        {% if user.is_authenticated %}
+                            <a href="{{ request.get_absolute_url }}" class="btn btn-sm btn-outline-primary">View</a>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="btn btn-sm btn-outline-primary">Login to view</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

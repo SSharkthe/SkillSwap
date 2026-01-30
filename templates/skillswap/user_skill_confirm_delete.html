@@ -1,0 +1,17 @@
+{% extends 'skillswap/base.html' %}
+
+{% block title %}Remove Skill · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-soft">
+    <div class="card-body">
+        <h3 class="fw-semibold">Remove Skill</h3>
+        <p class="text-muted">Are you sure you want to remove {{ user_skill.skill.name }} ({{ user_skill.type }})?</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Remove</button>
+            <a href="{% url 'skillswap:my-skills' %}" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% if messages %}
+    {% for message in messages %}
+        {% if message.tags == 'error' %}
+            {% with alert_class='danger' %}
+                <div class="alert alert-{{ alert_class }} shadow-sm" role="alert">{{ message }}</div>
+            {% endwith %}
+        {% else %}
+            <div class="alert alert-{{ message.tags }} shadow-sm" role="alert">{{ message }}</div>
+        {% endif %}
+    {% endfor %}
+{% endif %}
