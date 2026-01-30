@@ -1,0 +1,44 @@
+{% extends 'skillswap/base.html' %}
+
+{% block title %}Match Detail · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-soft mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h3 class="fw-semibold">{{ match.request.title }}</h3>
+                <p class="text-muted">Skill: {{ match.request.skill.name }}</p>
+                <p class="text-muted">Requester: {{ match.requester.username }} · Partner: {{ match.partner.username }}</p>
+            </div>
+            <span class="badge status-badge status-{{ match.status }}">{{ match.status|title }}</span>
+        </div>
+        <p>{{ match.request.description|truncatechars:200 }}</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-soft">
+    <div class="card-body">
+        <h5 class="fw-semibold">Actions</h5>
+        <div class="d-flex gap-2 flex-wrap">
+            {% if match.status == 'pending' and user == match.partner %}
+                <form method="post" action="{% url 'skillswap:match-action' match.pk 'accept' %}">
+                    {% csrf_token %}
+                    <button class="btn btn-primary" type="submit">Accept</button>
+                </form>
+                <form method="post" action="{% url 'skillswap:match-action' match.pk 'reject' %}">
+                    {% csrf_token %}
+                    <button class="btn btn-outline-danger" type="submit">Reject</button>
+                </form>
+            {% endif %}
+            {% if match.status == 'accepted' and (user == match.requester or user == match.partner) %}
+                <form method="post" action="{% url 'skillswap:match-action' match.pk 'complete' %}">
+                    {% csrf_token %}
+                    <button class="btn btn-success" type="submit">Mark Completed</button>
+                </form>
+            {% endif %}
+            <a href="{% url 'skillswap:match-list' %}" class="btn btn-outline-secondary">Back to Matches</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

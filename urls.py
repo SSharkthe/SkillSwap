@@ -1,0 +1,28 @@
+from django.urls import path
+
+from . import views
+
+app_name = 'skillswap'
+
+urlpatterns = [
+    path('', views.HomeView.as_view(), name='home'),
+    path('register/', views.register_view, name='register'),
+    path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
+    path('profiles/<str:username>/', views.ProfileDetailView.as_view(), name='profile-detail'),
+    path('profile/edit/', views.ProfileUpdateView.as_view(), name='profile-edit'),
+    path('skills/', views.my_skills_view, name='my-skills'),
+    path('skills/add/', views.user_skill_create, name='user-skill-add'),
+    path('skills/<int:pk>/edit/', views.user_skill_update, name='user-skill-edit'),
+    path('skills/<int:pk>/delete/', views.user_skill_delete, name='user-skill-delete'),
+    path('requests/', views.MyRequestListView.as_view(), name='my-requests'),
+    path('requests/add/', views.request_create, name='request-add'),
+    path('requests/<int:pk>/', views.RequestDetailView.as_view(), name='request-detail'),
+    path('requests/<int:pk>/edit/', views.request_update, name='request-edit'),
+    path('requests/<int:pk>/close/', views.request_close, name='request-close'),
+    path('explore/requests/', views.ExploreRequestListView.as_view(), name='explore-requests'),
+    path('explore/users/', views.ExploreUserListView.as_view(), name='explore-users'),
+    path('requests/<int:pk>/invite/', views.match_create, name='match-create'),
+    path('matches/', views.MatchListView.as_view(), name='match-list'),
+    path('matches/<int:pk>/', views.MatchDetailView.as_view(), name='match-detail'),
+    path('matches/<int:pk>/<str:action>/', views.match_action, name='match-action'),
+]

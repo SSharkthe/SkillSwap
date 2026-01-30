@@ -1,0 +1,54 @@
+{% extends 'skillswap/base.html' %}
+
+{% block title %}Explore Users · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-semibold">Explore Users</h2>
+        <p class="text-muted mb-0">Search for partners by skill and learning goals.</p>
+    </div>
+</div>
+
+<form method="get" class="card border-0 shadow-soft p-3 mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-6">
+            <label class="form-label">Skill</label>
+            <input type="text" name="skill" class="form-control" value="{{ request.GET.skill }}" placeholder="Search by skill name">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Type</label>
+            <select name="type" class="form-select">
+                <option value="">All</option>
+                {% for value, label in skill_type_choices %}
+                    <option value="{{ value }}" {% if request.GET.type == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Filter</button>
+        </div>
+    </div>
+</form>
+
+<div class="row g-4">
+    {% if users %}
+        {% for member in users %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-soft h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ member.get_full_name|default:member.username }}</h5>
+                        <p class="text-muted">{{ member.profile.preferred_mode|title }} · {{ member.profile.location|default:'Location not set' }}</p>
+                        <p class="small text-muted">{{ member.profile.bio|default:'No bio yet.'|truncatechars:120 }}</p>
+                        <a href="{% url 'skillswap:profile-detail' member.username %}" class="btn btn-sm btn-outline-primary">View Profile</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">No users match your filters.</div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
