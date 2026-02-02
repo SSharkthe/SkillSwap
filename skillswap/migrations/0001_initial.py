@@ -64,11 +64,13 @@ class Migration(migrations.Migration):
                 ('preferred_time', models.CharField(blank=True, max_length=120)),
                 (
                     'skill',
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='requests', to='skillswap.skill'),
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='requests',
+                                      to='skillswap.skill'),
                 ),
                 (
                     'user',
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='requests', to=settings.AUTH_USER_MODEL),
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='requests',
+                                      to=settings.AUTH_USER_MODEL),
                 ),
             ],
             options={
@@ -90,11 +92,13 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 (
                     'skill',
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='user_skills', to='skillswap.skill'),
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='user_skills',
+                                      to='skillswap.skill'),
                 ),
                 (
                     'user',
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='user_skills', to=settings.AUTH_USER_MODEL),
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='user_skills',
+                                      to=settings.AUTH_USER_MODEL),
                 ),
             ],
             options={
@@ -122,15 +126,18 @@ class Migration(migrations.Migration):
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 (
                     'partner',
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='partner_matches', to=settings.AUTH_USER_MODEL),
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='partner_matches',
+                                      to=settings.AUTH_USER_MODEL),
                 ),
                 (
                     'request',
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='matches', to='skillswap.request'),
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='matches',
+                                      to='skillswap.request'),
                 ),
                 (
                     'requester',
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='requested_matches', to=settings.AUTH_USER_MODEL),
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='requested_matches',
+                                      to=settings.AUTH_USER_MODEL),
                 ),
             ],
             options={
@@ -143,7 +150,8 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='match',
-            constraint=models.CheckConstraint(check=~Q(requester=models.F('partner')), name='requester_not_partner'),
+            constraint=models.CheckConstraint(condition=~Q(requester=models.F('partner')),
+                                              name='requester_not_partner'),
         ),
         migrations.AddConstraint(
             model_name='match',

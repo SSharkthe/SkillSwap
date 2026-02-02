@@ -107,7 +107,7 @@ class Match(models.Model):
 
     class Meta:
         constraints = [
-            models.CheckConstraint(check=~Q(requester=models.F('partner')), name='requester_not_partner'),
+            models.CheckConstraint(condition=~Q(requester=models.F('partner')), name='requester_not_partner'),
             models.UniqueConstraint(
                 fields=['request', 'requester', 'partner'],
                 condition=Q(status='pending'),
