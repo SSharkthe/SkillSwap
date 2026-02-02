@@ -1,14 +1,21 @@
 # Python
 __pycache__/
 *.pyc
+*.pyo
 
 # Django
 db.sqlite3
-*.log
+*.sqlite3
 media/
 
-# PyCharm
+# Virtualenv / Conda
+.venv/
+venv/
+env/
+
+# IDE
 .idea/
+.vscode/
 
 # OS
 .DS_Store
