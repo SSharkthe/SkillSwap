@@ -122,4 +122,42 @@
         </div>
     </div>
 </div>
+
+<div class="card border-0 shadow-soft mt-4">
+    <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Recommended Partners</h5>
+        <a href="{% url 'skillswap:recommendations' %}" class="btn btn-sm btn-outline-primary">See all</a>
+    </div>
+    <div class="card-body">
+        {% if recommended_partners %}
+            <div class="row g-3">
+                {% for partner in recommended_partners %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="border rounded-3 p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <strong>{{ partner.username }}</strong>
+                                    <div class="text-muted small">
+                                        {{ partner.profile.preferred_mode|title }} · {{ partner.profile.location|default:'Location not set' }}
+                                    </div>
+                                </div>
+                                <span class="badge text-bg-primary-subtle text-primary">{{ partner.overlap_count }} match{{ partner.overlap_count|pluralize }}</span>
+                            </div>
+                            <div class="text-muted small mb-2">
+                                {% for offer in partner.matching_offers|slice:":3" %}
+                                    <span class="badge text-bg-light text-dark border">{{ offer.skill.name }}</span>
+                                {% empty %}
+                                    No overlapping skills yet.
+                                {% endfor %}
+                            </div>
+                            <a href="{% url 'skillswap:profile-detail' partner.username %}" class="btn btn-sm btn-outline-secondary">View Profile</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">No recommendations yet. Add wants to see suggested partners.</p>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}
