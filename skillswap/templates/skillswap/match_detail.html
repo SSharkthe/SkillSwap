@@ -41,4 +41,38 @@
         </div>
     </div>
 </div>
+
+<div class="card border-0 shadow-soft mt-4">
+    <div class="card-body">
+        <h5 class="fw-semibold">Feedback</h5>
+        {% if feedback_entries %}
+            <div class="mb-3">
+                {% for entry in feedback_entries %}
+                    <div class="border rounded-3 p-3 mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong>{{ entry.rater.username }}</strong>
+                            <span class="badge text-bg-primary-subtle text-primary">{{ entry.rating }}/5</span>
+                        </div>
+                        <p class="mb-1">{{ entry.comment|default:"No comment provided." }}</p>
+                        <div class="text-muted small">{{ entry.created_at|date:"M d, Y" }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">No feedback yet for this match.</p>
+        {% endif %}
+
+        {% if feedback_form %}
+            <form method="post" action="{% url 'skillswap:feedback-create' match.pk %}">
+                {% csrf_token %}
+                {{ feedback_form.as_p }}
+                <button class="btn btn-primary" type="submit">Leave Feedback</button>
+            </form>
+        {% elif match.status != 'completed' %}
+            <p class="text-muted mb-0">Feedback is available once the match is completed.</p>
+        {% elif existing_feedback %}
+            <p class="text-muted mb-0">You already submitted feedback for this match.</p>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

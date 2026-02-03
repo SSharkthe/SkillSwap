@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
 from django.urls import reverse
@@ -121,3 +122,22 @@ class Match(models.Model):
 
     def get_absolute_url(self):
         return reverse('skillswap:match-detail', kwargs={'pk': self.pk})
+
+
+class Feedback(models.Model):
+    match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name='feedback')
+    rater = models.ForeignKey(User, on_delete=models.CASCADE, related_name='given_feedback')
+    ratee = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_feedback')
+    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.CharField(max_length=300, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['match', 'rater'], name='unique_feedback_per_match_rater'),
+            models.CheckConstraint(condition=~Q(rater=models.F('ratee')), name='rater_not_ratee'),
+        ]
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Feedback from {self.rater} to {self.ratee} ({self.rating})"

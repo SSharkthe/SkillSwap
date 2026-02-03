@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
-from .models import Match, Profile, Request, Skill, UserSkill
+from .models import Feedback, Match, Profile, Request, Skill, UserSkill
 
 User = get_user_model()
 
@@ -124,6 +124,25 @@ class MatchInviteForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = Match
         fields = ()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._apply_bootstrap()
+
+
+class FeedbackForm(BootstrapFormMixin, forms.ModelForm):
+    rating = forms.TypedChoiceField(
+        choices=[(value, value) for value in range(1, 6)],
+        coerce=int,
+        widget=forms.Select,
+    )
+
+    class Meta:
+        model = Feedback
+        fields = ('rating', 'comment')
+        widgets = {
+            'comment': forms.Textarea(attrs={'rows': 3, 'maxlength': 300}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
