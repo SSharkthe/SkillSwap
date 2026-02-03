@@ -3,7 +3,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Match, Request, Skill, UserSkill
+from .models import Feedback, Match, Request, Skill, UserSkill
 
 User = get_user_model()
 
@@ -97,3 +97,88 @@ class SkillSwapTests(TestCase):
         self.assertEqual(response.status_code, 302)
         match.refresh_from_db()
         self.assertEqual(match.status, Match.Status.COMPLETED)
+
+        def test_recommendations_login_required(self):
+            response = self.client.get(reverse('skillswap:recommendations'))
+            self.assertEqual(response.status_code, 302)
+
+        def test_recommendations_overlap_and_ordering(self):
+            skill_two = Skill.objects.create(name='Django', category='Programming')
+            skill_three = Skill.objects.create(name='Data Analysis', category='Data')
+
+            UserSkill.objects.create(user=self.user, skill=self.skill, type='want', level='beginner')
+            UserSkill.objects.create(user=self.user, skill=skill_two, type='want', level='beginner')
+
+            charlie = User.objects.create_user(username='charlie', password='password123')
+            dana = User.objects.create_user(username='dana', password='password123')
+
+            UserSkill.objects.create(user=self.other, skill=self.skill, type='offer', level='advanced')
+            UserSkill.objects.create(user=charlie, skill=self.skill, type='offer', level='advanced')
+            UserSkill.objects.create(user=charlie, skill=skill_two, type='offer', level='advanced')
+            UserSkill.objects.create(user=dana, skill=skill_three, type='offer', level='advanced')
+
+            self.client.login(username='alice', password='password123')
+            response = self.client.get(reverse('skillswap:recommendations'))
+            self.assertEqual(response.status_code, 200)
+            recommendations = list(response.context['recommendations'])
+            self.assertNotIn(self.user, recommendations)
+            self.assertIn(self.other, recommendations)
+            self.assertIn(charlie, recommendations)
+            self.assertNotIn(dana, recommendations)
+            self.assertEqual(recommendations[0], charlie)
+
+        def test_feedback_permissions_and_constraints(self):
+            request_obj = Request.objects.create(
+                user=self.other,
+                skill=self.skill,
+                title='Need Python help',
+                description='Functions and classes',
+                status='open',
+            )
+            match = Match.objects.create(
+                request=request_obj,
+                requester=self.user,
+                partner=self.other,
+                status=Match.Status.ACCEPTED,
+            )
+            User.objects.create_user(username='eve', password='password123')
+
+            self.client.login(username='eve', password='password123')
+            response = self.client.post(reverse('skillswap:feedback-create', args=[match.pk]), {'rating': 5})
+            self.assertEqual(response.status_code, 403)
+
+            self.client.logout()
+            self.client.login(username='alice', password='password123')
+            response = self.client.post(reverse('skillswap:feedback-create', args=[match.pk]), {'rating': 5})
+            self.assertEqual(response.status_code, 403)
+
+            match.status = Match.Status.COMPLETED
+            match.save(update_fields=['status'])
+            response = self.client.post(reverse('skillswap:feedback-create', args=[match.pk]), {'rating': 4})
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(Feedback.objects.filter(match=match, rater=self.user).count(), 1)
+            response = self.client.post(reverse('skillswap:feedback-create', args=[match.pk]), {'rating': 5})
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(Feedback.objects.filter(match=match, rater=self.user).count(), 1)
+
+        def test_profile_rating_summary(self):
+            request_obj = Request.objects.create(
+                user=self.other,
+                skill=self.skill,
+                title='Need Python help',
+                description='Functions and classes',
+                status='open',
+            )
+            match = Match.objects.create(
+                request=request_obj,
+                requester=self.user,
+                partner=self.other,
+                status=Match.Status.COMPLETED,
+            )
+            Feedback.objects.create(match=match, rater=self.user, ratee=self.other, rating=4, comment='Great session')
+
+            self.client.login(username='alice', password='password123')
+            response = self.client.get(reverse('skillswap:profile-detail', args=[self.other.username]))
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.context['rating_summary']['count'], 1)
+            self.assertAlmostEqual(response.context['rating_summary']['average'], 4)

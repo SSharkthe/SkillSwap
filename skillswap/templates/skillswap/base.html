@@ -15,32 +15,39 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
     <div class="container">
         <a class="navbar-brand fw-semibold" href="{% url 'skillswap:home' %}">SkillSwap</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="mainNav">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 {% if user.is_authenticated %}
-                <li class="nav-item"><a class="nav-link" href="{% url 'skillswap:dashboard' %}">Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'skillswap:explore-requests' %}">Explore Requests</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'skillswap:explore-users' %}">Explore Users</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'skillswap:match-list' %}">Matches</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'skillswap:dashboard' %}">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'skillswap:explore-requests' %}">Explore
+                        Requests</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'skillswap:explore-users' %}">Explore
+                        Users</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'skillswap:recommendations' %}">Recommendations</a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'skillswap:match-list' %}">Matches</a></li>
                 {% endif %}
             </ul>
             <ul class="navbar-nav ms-auto">
                 {% if user.is_authenticated %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'skillswap:profile-detail' user.username %}">Hi, {{ user.username }}</a>
-                </li>
-                <li class="nav-item">
-                    <form action="{% url 'logout' %}" method="post" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-primary btn-sm">Logout</button>
-                    </form>
-                </li>
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           href="{% url 'skillswap:profile-detail' user.username %}">Hi, {{ user.username }}</a>
+                    </li>
+                    <li class="nav-item">
+                        <form action="{% url 'logout' %}" method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-primary btn-sm">Logout</button>
+                        </form>
+                    </li>
                 {% else %}
-                <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
-                <li class="nav-item"><a class="btn btn-primary btn-sm" href="{% url 'skillswap:register' %}">Register</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
+                    <li class="nav-item"><a class="btn btn-primary btn-sm" href="{% url 'skillswap:register' %}">Register</a>
+                    </li>
                 {% endif %}
             </ul>
         </div>

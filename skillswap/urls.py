@@ -21,8 +21,10 @@ urlpatterns = [
     path('requests/<int:pk>/close/', views.request_close, name='request-close'),
     path('explore/requests/', views.ExploreRequestListView.as_view(), name='explore-requests'),
     path('explore/users/', views.ExploreUserListView.as_view(), name='explore-users'),
+    path('recommendations/', views.RecommendationListView.as_view(), name='recommendations'),
     path('requests/<int:pk>/invite/', views.match_create, name='match-create'),
     path('matches/', views.MatchListView.as_view(), name='match-list'),
     path('matches/<int:pk>/', views.MatchDetailView.as_view(), name='match-detail'),
     path('matches/<int:pk>/<str:action>/', views.match_action, name='match-action'),
+    path('matches/<int:pk>/feedback/', views.feedback_create, name='feedback-create'),
 ]

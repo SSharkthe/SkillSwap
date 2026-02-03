@@ -3,42 +3,76 @@
 {% block title %}Match Detail · SkillSwap{% endblock %}
 
 {% block content %}
-<div class="card border-0 shadow-soft mb-4">
-    <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
-            <div>
-                <h3 class="fw-semibold">{{ match.request.title }}</h3>
-                <p class="text-muted">Skill: {{ match.request.skill.name }}</p>
-                <p class="text-muted">Requester: {{ match.requester.username }} · Partner: {{ match.partner.username }}</p>
+    <div class="card border-0 shadow-soft mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h3 class="fw-semibold">{{ match.request.title }}</h3>
+                    <p class="text-muted">Skill: {{ match.request.skill.name }}</p>
+                    <p class="text-muted">Requester: {{ match.requester.username }} ·
+                        Partner: {{ match.partner.username }}</p>
+                </div>
+                <span class="badge status-badge status-{{ match.status }}">{{ match.status|title }}</span>
             </div>
-            <span class="badge status-badge status-{{ match.status }}">{{ match.status|title }}</span>
+            <p>{{ match.request.description|truncatechars:200 }}</p>
         </div>
-        <p>{{ match.request.description|truncatechars:200 }}</p>
     </div>
-</div>
 
-<div class="card border-0 shadow-soft">
-    <div class="card-body">
-        <h5 class="fw-semibold">Actions</h5>
-        <div class="d-flex gap-2 flex-wrap">
-            {% if match.status == 'pending' and user == match.partner %}
-                <form method="post" action="{% url 'skillswap:match-action' match.pk 'accept' %}">
-                    {% csrf_token %}
-                    <button class="btn btn-primary" type="submit">Accept</button>
-                </form>
-                <form method="post" action="{% url 'skillswap:match-action' match.pk 'reject' %}">
-                    {% csrf_token %}
-                    <button class="btn btn-outline-danger" type="submit">Reject</button>
-                </form>
-            {% endif %}
-            {% if match.status == 'accepted' and (user == match.requester or user == match.partner) %}
-                <form method="post" action="{% url 'skillswap:match-action' match.pk 'complete' %}">
-                    {% csrf_token %}
-                    <button class="btn btn-success" type="submit">Mark Completed</button>
-                </form>
-            {% endif %}
-            <a href="{% url 'skillswap:match-list' %}" class="btn btn-outline-secondary">Back to Matches</a>
+    <div class="card border-0 shadow-soft">
+        <div class="card-body">
+            <h5 class="fw-semibold">Actions</h5>
+            <div class="d-flex gap-2 flex-wrap">
+                {% if match.status == 'pending' and user == match.partner %}
+                    <form method="post" action="{% url 'skillswap:match-action' match.pk 'accept' %}">
+                        {% csrf_token %}
+                        <button class="btn btn-primary" type="submit">Accept</button>
+                    </form>
+                    <form method="post" action="{% url 'skillswap:match-action' match.pk 'reject' %}">
+                        {% csrf_token %}
+                        <button class="btn btn-outline-danger" type="submit">Reject</button>
+                    </form>
+                {% endif %}
+                {% if match.status == 'accepted' and (user == match.requester or user == match.partner) %}
+                    <form method="post" action="{% url 'skillswap:match-action' match.pk 'complete' %}">
+                        {% csrf_token %}
+                        <button class="btn btn-success" type="submit">Mark Completed</button>
+                    </form>
+                {% endif %}
+                <a href="{% url 'skillswap:match-list' %}" class="btn btn-outline-secondary">Back to Matches</a>
+            </div>
         </div>
     </div>
-</div>
+    <div class="card border-0 shadow-soft mt-4">
+        <div class="card-body">
+            <h5 class="fw-semibold">Feedback</h5>
+            {% if feedback_entries %}
+                <div class="mb-3">
+                    {% for entry in feedback_entries %}
+                        <div class="border rounded-3 p-3 mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong>{{ entry.rater.username }}</strong>
+                                <span class="badge text-bg-primary-subtle text-primary">{{ entry.rating }}/5</span>
+                            </div>
+                            <p class="mb-1">{{ entry.comment|default:"No comment provided." }}</p>
+                            <div class="text-muted small">{{ entry.created_at|date:"M d, Y" }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">No feedback yet for this match.</p>
+            {% endif %}
+
+            {% if feedback_form %}
+                <form method="post" action="{% url 'skillswap:feedback-create' match.pk %}">
+                    {% csrf_token %}
+                    {{ feedback_form.as_p }}
+                    <button class="btn btn-primary" type="submit">Leave Feedback</button>
+                </form>
+            {% elif match.status != 'completed' %}
+                <p class="text-muted mb-0">Feedback is available once the match is completed.</p>
+            {% elif existing_feedback %}
+                <p class="text-muted mb-0">You already submitted feedback for this match.</p>
+            {% endif %}
+        </div>
+    </div>
 {% endblock %}
