@@ -8,6 +8,13 @@
         <div class="card border-0 shadow-soft">
             <div class="card-body">
                 <h3 class="fw-semibold mb-3">Welcome Back</h3>
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
                 <form method="post">
                     {% csrf_token %}
                     {% include 'skillswap/partials/form_fields.html' %}

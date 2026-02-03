@@ -77,6 +77,8 @@ class ProfileDetailView(LoginRequiredMixin, DetailView):
         )
         context['rating_summary'] = rating_summary
         context['recent_feedback'] = self.object.user.received_feedback.exclude(comment='')[:3]
+        context['offers'] = self.object.user.user_skills.filter(type=UserSkill.SkillType.OFFER).select_related('skill')
+        context['wants'] = self.object.user.user_skills.filter(type=UserSkill.SkillType.WANT).select_related('skill')
         return context
 
 
@@ -196,6 +198,7 @@ class RequestDetailView(LoginRequiredMixin, DetailView):
             partner=req.user,
             status=Match.Status.PENDING,
         ).first()
+        context['is_bookmarked'] = self.request.user.profile.bookmarked_requests.filter(pk=req.pk).exists()
         return context
 
 
@@ -233,6 +236,26 @@ class ExploreRequestListView(LoginRequiredMixin, ListView):
         context['categories'] = Skill.objects.values_list('category', flat=True).distinct()
         return context
 
+@login_required
+def bookmark_toggle(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden('Invalid method.')
+    request_obj = get_object_or_404(Request, pk=pk)
+    profile = request.user.profile
+    if profile.bookmarked_requests.filter(pk=request_obj.pk).exists():
+        profile.bookmarked_requests.remove(request_obj)
+        messages.info(request, 'Removed from bookmarks.')
+    else:
+        profile.bookmarked_requests.add(request_obj)
+        messages.success(request, 'Bookmarked.')
+    next_url = request.POST.get('next') or request.GET.get('next') or request_obj.get_absolute_url()
+    return redirect(next_url)
+
+
+@login_required
+def bookmark_list(request):
+    bookmarks = request.user.profile.bookmarked_requests.select_related('skill', 'user').order_by('-created_at')
+    return render(request, 'skillswap/bookmarks.html', {'bookmarks': bookmarks})
 
 class ExploreUserListView(LoginRequiredMixin, ListView):
     template_name = 'skillswap/explore_users.html'

@@ -5,8 +5,9 @@ from .models import Feedback, Match, Profile, Request, Skill, UserSkill
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'preferred_mode', 'location')
+    list_display = ('user', 'preferred_mode', 'location', 'avatar')
     search_fields = ('user__username', 'location')
+    filter_horizontal = ('bookmarked_requests',)
 
 
 @admin.register(Skill)

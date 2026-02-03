@@ -27,7 +27,12 @@
                     {% for req in requests %}
                     <tr>
                         <td>{{ req.title }}</td>
-                        <td>{{ req.skill.name }}</td>
+                        <td>
+                            {{ req.skill.name }}
+                            <span class="text-muted small ms-2">
+                                <i class="bi {{ req.skill.category_icon }} me-1"></i>{{ req.skill.category|title }}
+                            </span>
+                        </td>
                         <td><span class="badge status-badge status-{{ req.status }}">{{ req.status|title }}</span></td>
                         <td class="text-end">
                             <a href="{{ req.get_absolute_url }}" class="btn btn-sm btn-outline-primary">View</a>

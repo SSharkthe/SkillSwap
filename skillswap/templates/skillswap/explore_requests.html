@@ -3,55 +3,60 @@
 {% block title %}Explore Requests · SkillSwap{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="fw-semibold">Explore Requests</h2>
-        <p class="text-muted mb-0">Find open requests and offer your support.</p>
-    </div>
-</div>
-
-<form method="get" class="card border-0 shadow-soft p-3 mb-4">
-    <div class="row g-3 align-items-end">
-        <div class="col-md-6">
-            <label class="form-label">Keyword</label>
-            <input type="text" name="q" class="form-control" value="{{ request.GET.q }}" placeholder="Search by title, skill, or description">
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Category</label>
-            <select name="category" class="form-select">
-                <option value="">All categories</option>
-                {% for category in categories %}
-                    <option value="{{ category }}" {% if request.GET.category == category %}selected{% endif %}>{{ category }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100">Filter</button>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-semibold">Explore Requests</h2>
+            <p class="text-muted mb-0">Find open requests and offer your support.</p>
         </div>
     </div>
-</form>
 
-<div class="row g-4">
-    {% if requests %}
-        {% for req in requests %}
-            <div class="col-md-6 col-lg-4">
-                <div class="card border-0 shadow-soft h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <h5 class="card-title">{{ req.title }}</h5>
-                            <span class="badge status-badge status-{{ req.status }}">{{ req.status|title }}</span>
+    <form method="get" class="card border-0 shadow-soft p-3 mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label">Keyword</label>
+                <input type="text" name="q" class="form-control" value="{{ request.GET.q }}"
+                       placeholder="Search by title, skill, or description">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Category</label>
+                <select name="category" class="form-select">
+                    <option value="">All categories</option>
+                    {% for category in categories %}
+                        <option value="{{ category }}"
+                                {% if request.GET.category == category %}selected{% endif %}>{{ category|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-4">
+        {% if requests %}
+            {% for req in requests %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card border-0 shadow-soft h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h5 class="card-title">{{ req.title }}</h5>
+                                <span class="badge status-badge status-{{ req.status }}">{{ req.status|title }}</span>
+                            </div>
+                            <p class="text-muted">
+                                {{ req.skill.name }}
+                                · <i class="bi {{ req.skill.category_icon }} me-1"></i>{{ req.skill.category|title }}
+                            </p>
+                            <p class="small text-muted">{{ req.description|truncatechars:120 }}</p>
+                            <a href="{{ req.get_absolute_url }}" class="btn btn-sm btn-outline-primary">View Details</a>
                         </div>
-                        <p class="text-muted">{{ req.skill.name }} · {{ req.skill.category }}</p>
-                        <p class="small text-muted">{{ req.description|truncatechars:120 }}</p>
-                        <a href="{{ req.get_absolute_url }}" class="btn btn-sm btn-outline-primary">View Details</a>
                     </div>
                 </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">No requests match your filters.</div>
             </div>
-        {% endfor %}
-    {% else %}
-        <div class="col-12">
-            <div class="alert alert-info">No requests match your filters.</div>
-        </div>
-    {% endif %}
-</div>
+        {% endif %}
+    </div>
 {% endblock %}

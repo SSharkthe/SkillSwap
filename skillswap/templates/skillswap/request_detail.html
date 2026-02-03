@@ -8,9 +8,26 @@
         <div class="d-flex justify-content-between">
             <div>
                 <h3 class="fw-semibold">{{ request_obj.title }}</h3>
-                <p class="text-muted">{{ request_obj.skill.name }} · {{ request_obj.skill.category }}</p>
+                <p class="text-muted">
+                    {{ request_obj.skill.name }}
+                    · <i class="bi {{ request_obj.skill.category_icon }} me-1"></i>{{ request_obj.skill.category|title }}
+                </p>
             </div>
-            <span class="badge status-badge status-{{ request_obj.status }}">{{ request_obj.status|title }}</span>
+            <div class="d-flex align-items-start gap-2">
+                <form method="post" action="{% url 'skillswap:request-bookmark' request_obj.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary"
+                            aria-label="{% if is_bookmarked %}Remove bookmark{% else %}Add bookmark{% endif %}">
+                        {% if is_bookmarked %}
+                            <i class="bi bi-star-fill text-warning"></i>
+                        {% else %}
+                            <i class="bi bi-star"></i>
+                        {% endif %}
+                    </button>
+                </form>
+                <span class="badge status-badge status-{{ request_obj.status }}">{{ request_obj.status|title }}</span>
+            </div>
         </div>
         <p>{{ request_obj.description }}</p>
         <p class="text-muted"><strong>Preferred time:</strong> {{ request_obj.preferred_time|default:'Flexible' }}</p>
