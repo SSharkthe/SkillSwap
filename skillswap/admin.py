@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Match, Profile, Request, Skill, UserSkill
+from .models import Feedback, Match, Profile, Request, Skill, UserSkill
 
 
 @admin.register(Profile)
@@ -34,3 +34,10 @@ class MatchAdmin(admin.ModelAdmin):
     list_display = ('request', 'requester', 'partner', 'status', 'created_at')
     list_filter = ('status',)
     search_fields = ('request__title', 'requester__username', 'partner__username')
+
+
+@admin.register(Feedback)
+class FeedbackAdmin(admin.ModelAdmin):
+    list_display = ('match', 'rater', 'ratee', 'rating', 'created_at')
+    list_filter = ('rating',)
+    search_fields = ('match__request__title', 'rater__username', 'ratee__username')

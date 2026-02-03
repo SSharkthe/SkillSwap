@@ -4,15 +4,15 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import IntegrityError
-from django.db.models import Q
+from django.db.models import Avg, Case, Count, IntegerField, Prefetch, Q, Value, When
 from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.generic import DetailView, ListView, TemplateView, UpdateView
 
-from .forms import MatchInviteForm, ProfileForm, RegistrationForm, RequestForm, UserSkillForm
-from .models import Match, Profile, Request, Skill, UserSkill
+from .forms import FeedbackForm, MatchInviteForm, ProfileForm, RegistrationForm, RequestForm, UserSkillForm
+from .models import Feedback, Match, Profile, Request, Skill, UserSkill
 
 User = get_user_model()
 
@@ -57,6 +57,7 @@ class DashboardView(TemplateView):
         context['wants'] = user.user_skills.filter(type=UserSkill.SkillType.WANT)
         context['requests'] = user.requests.select_related('skill')
         context['matches'] = Match.objects.filter(Q(requester=user) | Q(partner=user)).select_related('request')
+        context['recommended_partners'] = get_recommended_partners(user=user, limit=6)
         return context
 
 
@@ -67,6 +68,16 @@ class ProfileDetailView(LoginRequiredMixin, DetailView):
     def get_object(self, queryset=None):
         user = get_object_or_404(User, username=self.kwargs['username'])
         return user.profile
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        rating_summary = self.object.user.received_feedback.aggregate(
+            average=Avg('rating'),
+            count=Count('id'),
+        )
+        context['rating_summary'] = rating_summary
+        context['recent_feedback'] = self.object.user.received_feedback.exclude(comment='')[:3]
+        return context
 
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
@@ -282,6 +293,16 @@ class MatchDetailView(LoginRequiredMixin, DetailView):
             raise Http404
         return match
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        match = self.object
+        context['feedback_entries'] = match.feedback.select_related('rater', 'ratee')
+        existing_feedback = match.feedback.filter(rater=self.request.user).first()
+        context['existing_feedback'] = existing_feedback
+        if match.status == Match.Status.COMPLETED and existing_feedback is None:
+            context['feedback_form'] = FeedbackForm()
+        return context
+
 
 @login_required
 def match_action(request, pk, action):
@@ -308,3 +329,105 @@ def match_action(request, pk, action):
         messages.warning(request, 'Action not available.')
 
     return redirect(match.get_absolute_url())
+
+
+class RecommendationListView(LoginRequiredMixin, ListView):
+    template_name = 'skillswap/recommendations.html'
+    context_object_name = 'recommendations'
+
+    def get_queryset(self):
+        return get_recommended_partners(
+            user=self.request.user,
+            q=self.request.GET.get('q'),
+            mode=self.request.GET.get('mode'),
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['mode_choices'] = Profile.PreferredMode.choices
+        context['q'] = self.request.GET.get('q', '')
+        context['mode'] = self.request.GET.get('mode', '')
+        return context
+
+
+@login_required
+def feedback_create(request, pk):
+    match = get_object_or_404(Match, pk=pk)
+    if request.user not in {match.requester, match.partner}:
+        return HttpResponseForbidden('Not allowed.')
+    if match.status != Match.Status.COMPLETED:
+        return HttpResponseForbidden('Match is not completed.')
+    if Feedback.objects.filter(match=match, rater=request.user).exists():
+        messages.info(request, 'You already left feedback for this match.')
+        return redirect(match.get_absolute_url())
+    if request.method != 'POST':
+        return HttpResponseForbidden('Invalid method.')
+    form = FeedbackForm(request.POST)
+    if form.is_valid():
+        feedback = form.save(commit=False)
+        feedback.match = match
+        feedback.rater = request.user
+        feedback.ratee = match.partner if request.user == match.requester else match.requester
+        feedback.save()
+        messages.success(request, 'Feedback submitted. Thank you!')
+    else:
+        messages.error(request, 'Please correct the feedback form.')
+    return redirect(match.get_absolute_url())
+
+
+def get_recommended_partners(user, q=None, mode=None, limit=None):
+    want_skills = UserSkill.objects.filter(user=user, type=UserSkill.SkillType.WANT)
+    if q:
+        want_skills = want_skills.filter(skill__name__icontains=q)
+    want_skill_ids = list(want_skills.values_list('skill_id', flat=True))
+    if not want_skill_ids:
+        return User.objects.none()
+
+    matched_user_ids = Match.objects.filter(
+        Q(requester=user) | Q(partner=user),
+        status__in=[Match.Status.ACCEPTED, Match.Status.COMPLETED],
+    ).values_list('requester_id', 'partner_id')
+    exclude_ids = {user.id}
+    for requester_id, partner_id in matched_user_ids:
+        exclude_ids.update({requester_id, partner_id})
+
+    qs = User.objects.select_related('profile').exclude(id__in=exclude_ids)
+    if mode in {choice[0] for choice in Profile.PreferredMode.choices}:
+        qs = qs.filter(profile__preferred_mode=mode)
+    qs = qs.annotate(
+        overlap_count=Count(
+            'user_skills__skill',
+            filter=Q(
+                user_skills__type=UserSkill.SkillType.OFFER,
+                user_skills__skill_id__in=want_skill_ids,
+            ),
+            distinct=True,
+        ),
+        completeness=Case(
+            When(
+                ~Q(profile__bio='') & ~Q(profile__availability=''),
+                then=Value(2),
+            ),
+            When(
+                ~Q(profile__bio='') | ~Q(profile__availability=''),
+                then=Value(1),
+            ),
+            default=Value(0),
+            output_field=IntegerField(),
+        ),
+    ).filter(overlap_count__gt=0)
+
+    qs = qs.prefetch_related(
+        Prefetch(
+            'user_skills',
+            queryset=UserSkill.objects.filter(
+                type=UserSkill.SkillType.OFFER,
+                skill_id__in=want_skill_ids,
+            ).select_related('skill'),
+            to_attr='matching_offers',
+        ),
+    ).order_by('-overlap_count', '-completeness', 'username')
+
+    if limit:
+        return qs[:limit]
+    return qs
