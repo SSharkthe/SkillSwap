@@ -8,10 +8,13 @@ form learning partnerships.
 ## Features
 
 - Authentication (register, login, logout)
+- Password management (change password at `/accounts/password/change/`)
 - Profiles with bio, availability, preferred mode, and location
+- Profile avatars (upload images to personalize your account)
 - Skill offers and wants with levels
 - Recommended partners based on matching wants/offers
 - Learning requests linked to skills
+- Bookmarked requests saved under "My Bookmarks"
 - Match invitations with accept/reject/completed status
 - Post-match ratings and feedback between participants
 - Explore requests and users with search/filter
@@ -36,6 +39,12 @@ form learning partnerships.
    python manage.py runserver
    ```
 
+## Media Uploads (Avatars)
+
+Uploaded avatars are stored in the `media/` folder when running locally.
+Make sure `MEDIA_URL` and `MEDIA_ROOT` are configured (already set in `config/settings.py`).
+When `DEBUG=True`, Django serves media files automatically.
+
 ## Running Tests
 
 ```bash
@@ -50,6 +59,7 @@ python manage.py test
 4. Create a learning request tied to a skill.
 5. Explore requests or users and send match invitations.
 6. Accept, reject, or complete matches from your dashboard.
+7. Bookmark requests to keep a personalized list at `/bookmarks/`.
 4. Review recommended partners based on your wants.
 5. Create a learning request tied to a skill.
 6. Explore requests or users and send match invitations.

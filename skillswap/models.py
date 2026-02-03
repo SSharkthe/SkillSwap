@@ -22,6 +22,12 @@ class Profile(models.Model):
         default=PreferredMode.BOTH,
     )
     location = models.CharField(max_length=120, blank=True)
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    bookmarked_requests = models.ManyToManyField(
+        'Request',
+        blank=True,
+        related_name='bookmarked_by',
+    )
 
     def __str__(self):
         return f"Profile for {self.user.username}"
@@ -31,8 +37,20 @@ class Profile(models.Model):
 
 
 class Skill(models.Model):
+    class Category(models.TextChoices):
+        PROGRAMMING = 'programming', 'Programming'
+        ART = 'art', 'Art'
+        LANGUAGE = 'language', 'Language'
+        MUSIC = 'music', 'Music'
+        SPORTS = 'sports', 'Sports'
+        OTHER = 'other', 'Other'
+
     name = models.CharField(max_length=120)
-    category = models.CharField(max_length=120)
+    category = models.CharField(
+        max_length=120,
+        choices=Category.choices,
+        default=Category.OTHER,
+    )
     description = models.TextField(blank=True)
 
     class Meta:
@@ -41,6 +59,16 @@ class Skill(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.category})"
+
+    def category_icon(self):
+        return {
+            self.Category.PROGRAMMING: 'bi-code-slash',
+            self.Category.ART: 'bi-palette',
+            self.Category.LANGUAGE: 'bi-translate',
+            self.Category.MUSIC: 'bi-music-note-beamed',
+            self.Category.SPORTS: 'bi-trophy',
+            self.Category.OTHER: 'bi-tag',
+        }.get(self.category, 'bi-tag')
 
 
 class UserSkill(models.Model):

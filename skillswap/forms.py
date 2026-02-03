@@ -11,7 +11,14 @@ class BootstrapFormMixin:
     def _apply_bootstrap(self):
         for field in self.fields.values():
             if isinstance(field.widget,
-                          (forms.TextInput, forms.EmailInput, forms.PasswordInput, forms.Textarea, forms.Select)):
+                          (
+                                  forms.TextInput,
+                                  forms.EmailInput,
+                                  forms.PasswordInput,
+                                  forms.Textarea,
+                                  forms.Select,
+                                  forms.FileInput,
+                          )):
                 field.widget.attrs.setdefault('class', 'form-control')
             if isinstance(field.widget, forms.CheckboxInput):
                 field.widget.attrs.setdefault('class', 'form-check-input')
@@ -38,7 +45,7 @@ class BootstrapAuthenticationForm(BootstrapFormMixin, AuthenticationForm):
 class ProfileForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ('bio', 'availability', 'preferred_mode', 'location')
+        fields = ('avatar', 'bio', 'availability', 'preferred_mode', 'location')
         widgets = {
             'bio': forms.Textarea(attrs={'rows': 4}),
         }

@@ -3,17 +3,24 @@
 {% block title %}Edit Profile · SkillSwap{% endblock %}
 
 {% block content %}
-<div class="card border-0 shadow-soft">
-    <div class="card-body">
-        <h3 class="fw-semibold">Edit Profile</h3>
-        <form method="post">
-            {% csrf_token %}
-            {% include 'skillswap/partials/form_fields.html' %}
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">Save</button>
-                <a href="{% url 'skillswap:dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
-            </div>
-        </form>
+    <div class="card border-0 shadow-soft">
+        <div class="card-body">
+            <h3 class="fw-semibold">Edit Profile</h3>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% if user.profile.avatar %}
+                    <div class="mb-3 d-flex align-items-center gap-3">
+                        <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }} avatar"
+                             class="avatar-img avatar-lg">
+                        <div class="text-muted small">Current avatar</div>
+                    </div>
+                {% endif %}
+                {% include 'skillswap/partials/form_fields.html' %}
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <a href="{% url 'skillswap:dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 {% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'skillswap/base.html' %}
+
+{% block title %}My Bookmarks · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-semibold">My Bookmarks</h2>
+        <p class="text-muted mb-0">Saved requests you want to revisit.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% if bookmarks %}
+        {% for req in bookmarks %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-soft h-100">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title">{{ req.title }}</h5>
+                            <span class="badge status-badge status-{{ req.status }}">{{ req.status|title }}</span>
+                        </div>
+                        <p class="text-muted">
+                            {{ req.skill.name }}
+                            · <i class="bi {{ req.skill.category_icon }} me-1"></i>{{ req.skill.category|title }}
+                        </p>
+                        <p class="small text-muted flex-grow-1">{{ req.description|truncatechars:120 }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ req.get_absolute_url }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                            <form method="post" action="{% url 'skillswap:request-bookmark' req.pk %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary" aria-label="Remove bookmark">
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">You have no bookmarks yet. Star a request to save it here.</div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

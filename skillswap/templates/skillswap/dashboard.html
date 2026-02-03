@@ -17,9 +17,20 @@
             <div class="card border-0 shadow-soft h-100">
                 <div class="card-body">
                     <h6 class="text-muted">Profile</h6>
-                    <p class="fw-semibold mb-1">{{ user.get_full_name|default:user.username }}</p>
-                    <p class="text-muted mb-2">{{ profile.preferred_mode|title }}
-                        · {{ profile.location|default:'Location not set' }}</p>
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        {% if profile.avatar %}
+                            <img src="{{ profile.avatar.url }}" alt="{{ user.username }} avatar"
+                                 class="avatar-img avatar-lg">
+                        {% else %}
+                            <span class="avatar-placeholder avatar-lg"
+                                  aria-hidden="true">{{ user.username|first|upper }}</span>
+                        {% endif %}
+                        <div>
+                            <p class="fw-semibold mb-1">{{ user.get_full_name|default:user.username }}</p>
+                            <p class="text-muted mb-0">{{ profile.preferred_mode|title }}
+                                · {{ profile.location|default:'Location not set' }}</p>
+                        </div>
+                    </div>
                     <p class="small">{{ profile.bio|default:'Add a short bio to help others understand your learning goals.' }}</p>
                     <a href="{% url 'skillswap:profile-detail' user.username %}" class="btn btn-sm btn-outline-primary">View
                         Profile</a>
@@ -64,7 +75,9 @@
                                         <strong>{{ skill.skill.name }}</strong>
                                         <span class="badge text-bg-primary-subtle text-primary ms-2">{{ skill.level }}</span>
                                     </div>
-                                    <span class="text-muted small">{{ skill.skill.category }}</span>
+                                    <span class="text-muted small">
+                                        <i class="bi {{ skill.skill.category_icon }} me-1"></i>{{ skill.skill.category|title }}
+                                    </span>
                                 </li>
                             {% endfor %}
                         </ul>
@@ -80,7 +93,9 @@
                                         <strong>{{ skill.skill.name }}</strong>
                                         <span class="badge text-bg-secondary-subtle text-secondary ms-2">{{ skill.level }}</span>
                                     </div>
-                                    <span class="text-muted small">{{ skill.skill.category }}</span>
+                                    <span class="text-muted small">
+                                        <i class="bi {{ skill.skill.category_icon }} me-1"></i>{{ skill.skill.category|title }}
+                                    </span>
                                 </li>
                             {% endfor %}
                         </ul>

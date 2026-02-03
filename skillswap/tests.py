@@ -12,7 +12,7 @@ class SkillSwapTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='alice', password='password123')
         self.other = User.objects.create_user(username='bob', password='password123')
-        self.skill = Skill.objects.create(name='Python', category='Programming')
+        self.skill = Skill.objects.create(name='Python', category='programming')
 
     def test_registration_creates_profile(self):
         response = self.client.post(
@@ -103,8 +103,8 @@ class SkillSwapTests(TestCase):
             self.assertEqual(response.status_code, 302)
 
         def test_recommendations_overlap_and_ordering(self):
-            skill_two = Skill.objects.create(name='Django', category='Programming')
-            skill_three = Skill.objects.create(name='Data Analysis', category='Data')
+            skill_two = Skill.objects.create(name='Django', category='programming')
+            skill_three = Skill.objects.create(name='Data Analysis', category='other')
 
             UserSkill.objects.create(user=self.user, skill=self.skill, type='want', level='beginner')
             UserSkill.objects.create(user=self.user, skill=skill_two, type='want', level='beginner')
@@ -182,3 +182,66 @@ class SkillSwapTests(TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.context['rating_summary']['count'], 1)
             self.assertAlmostEqual(response.context['rating_summary']['average'], 4)
+
+        def test_bookmark_toggle_requires_login(self):
+            request_obj = Request.objects.create(
+                user=self.other,
+                skill=self.skill,
+                title='Need Python help',
+                description='Functions and classes',
+                status='open',
+            )
+            response = self.client.post(reverse('skillswap:request-bookmark', args=[request_obj.pk]))
+            self.assertEqual(response.status_code, 302)
+            self.assertIn(reverse('login'), response.url)
+
+        def test_bookmark_toggle_adds_and_removes(self):
+            request_obj = Request.objects.create(
+                user=self.other,
+                skill=self.skill,
+                title='Need Python help',
+                description='Functions and classes',
+                status='open',
+            )
+            self.client.login(username='alice', password='password123')
+            response = self.client.post(reverse('skillswap:request-bookmark', args=[request_obj.pk]))
+            self.assertEqual(response.status_code, 302)
+            self.assertTrue(self.user.profile.bookmarked_requests.filter(pk=request_obj.pk).exists())
+
+            response = self.client.post(reverse('skillswap:request-bookmark', args=[request_obj.pk]))
+            self.assertEqual(response.status_code, 302)
+            self.assertFalse(self.user.profile.bookmarked_requests.filter(pk=request_obj.pk).exists())
+
+        def test_bookmark_list_scoped_to_user(self):
+            request_obj = Request.objects.create(
+                user=self.other,
+                skill=self.skill,
+                title='Need Python help',
+                description='Functions and classes',
+                status='open',
+            )
+            other_request = Request.objects.create(
+                user=self.user,
+                skill=self.skill,
+                title='Need Java help',
+                description='Basics',
+                status='open',
+            )
+            self.user.profile.bookmarked_requests.add(request_obj)
+            self.other.profile.bookmarked_requests.add(other_request)
+
+            self.client.login(username='alice', password='password123')
+            response = self.client.get(reverse('skillswap:bookmarks'))
+            self.assertEqual(response.status_code, 200)
+            bookmarks = list(response.context['bookmarks'])
+            self.assertIn(request_obj, bookmarks)
+            self.assertNotIn(other_request, bookmarks)
+
+        def test_password_change_requires_login(self):
+            response = self.client.get(reverse('password_change'))
+            self.assertEqual(response.status_code, 302)
+
+        def test_password_change_page_for_logged_in_user(self):
+            self.client.login(username='alice', password='password123')
+            response = self.client.get(reverse('password_change'))
+            self.assertEqual(response.status_code, 200)
