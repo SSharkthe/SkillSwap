@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import Feedback, Match, Notification, Profile, Request, Skill, UserSkill
+from .models import Block, Conversation, Feedback, Match, Message, Notification, Profile, Report, Request, Skill, \
+    UserSkill
 
 
 @admin.register(Profile)
@@ -49,3 +50,39 @@ class NotificationAdmin(admin.ModelAdmin):
     list_display = ('user', 'verb', 'is_read', 'created_at')
     list_filter = ('is_read', 'verb')
     search_fields = ('user__username', 'actor__username', 'message')
+
+
+@admin.register(Block)
+class BlockAdmin(admin.ModelAdmin):
+    list_display = ('blocker', 'blocked', 'created_at')
+    search_fields = ('blocker__username', 'blocked__username')
+    list_filter = ('created_at',)
+
+
+@admin.register(Conversation)
+class ConversationAdmin(admin.ModelAdmin):
+    list_display = ('match', 'created_at')
+    search_fields = ('match__request__title', 'match__requester__username', 'match__partner__username')
+
+
+@admin.register(Message)
+class MessageAdmin(admin.ModelAdmin):
+    list_display = ('conversation', 'sender', 'created_at', 'is_read')
+    list_filter = ('is_read', 'created_at')
+    search_fields = ('sender__username', 'body')
+
+
+@admin.register(Report)
+class ReportAdmin(admin.ModelAdmin):
+    list_display = ('id', 'reporter', 'reported_user', 'reason', 'status', 'created_at')
+    list_filter = ('status', 'reason')
+    search_fields = ('reporter__username', 'reported_user__username')
+    actions = ('mark_resolved', 'mark_dismissed')
+
+    @admin.action(description='Mark selected reports resolved')
+    def mark_resolved(self, request, queryset):
+        queryset.update(status=Report.Status.RESOLVED)
+
+    @admin.action(description='Mark selected reports dismissed')
+    def mark_dismissed(self, request, queryset):
+        queryset.update(status=Report.Status.DISMISSED)

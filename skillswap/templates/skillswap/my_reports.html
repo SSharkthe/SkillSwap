@@ -1,0 +1,36 @@
+{% extends 'skillswap/base.html' %}
+
+{% block title %}My Reports · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-soft">
+    <div class="card-body">
+        <h2 class="fw-semibold mb-4">My Reports</h2>
+        {% if reports %}
+            <div class="list-group list-group-flush">
+                {% for report in reports %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-semibold">{{ report.get_reason_display }}</div>
+                                <div class="text-muted small">
+                                    {{ report.created_at|date:"M d, Y" }}
+                                    · Status: {{ report.get_status_display }}
+                                </div>
+                                {% if report.details %}
+                                    <p class="mb-0">{{ report.details|truncatechars:120 }}</p>
+                                {% endif %}
+                            </div>
+                            {% if report.reported_user %}
+                                <span class="badge text-bg-secondary">{{ report.reported_user.username }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">You haven't submitted any reports yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,7 +1,9 @@
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.db.models import Q
+from django.db.models import F, Q
 from django.urls import reverse
 
 User = settings.AUTH_USER_MODEL
@@ -43,6 +45,22 @@ class Profile(models.Model):
 
     def get_absolute_url(self):
         return reverse('skillswap:profile-detail', kwargs={'username': self.user.username})
+
+
+class Block(models.Model):
+    blocker = models.ForeignKey(User, related_name="blocks_made", on_delete=models.CASCADE)
+    blocked = models.ForeignKey(User, related_name="blocked_by", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["blocker", "blocked"], name="unique_block"),
+            models.CheckConstraint(condition=~Q(blocker=F("blocked")), name="no_self_block"),
+        ]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.blocker} blocked {self.blocked}"
 
 
 class Skill(models.Model):
@@ -179,6 +197,31 @@ class Match(models.Model):
         return reverse('skillswap:match-detail', kwargs={'pk': self.pk})
 
 
+class Conversation(models.Model):
+    match = models.OneToOneField(Match, related_name="conversation", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Conversation for {self.match}"
+
+
+class Message(models.Model):
+    conversation = models.ForeignKey(Conversation, related_name="messages", on_delete=models.CASCADE)
+    sender = models.ForeignKey(User, related_name="sent_messages", on_delete=models.CASCADE)
+    body = models.TextField(max_length=2000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"Message from {self.sender} at {self.created_at:%Y-%m-%d %H:%M}"
+
+
 class Feedback(models.Model):
     match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name='feedback')
     rater = models.ForeignKey(User, on_delete=models.CASCADE, related_name='given_feedback')
@@ -196,6 +239,52 @@ class Feedback(models.Model):
 
     def __str__(self):
         return f"Feedback from {self.rater} to {self.ratee} ({self.rating})"
+
+
+class Report(models.Model):
+    class Reason(models.TextChoices):
+        SPAM = "spam", "Spam"
+        HARASSMENT = "harassment", "Harassment"
+        SCAM = "scam", "Scam"
+        INAPPROPRIATE = "inappropriate", "Inappropriate"
+        OTHER = "other", "Other"
+
+    class Status(models.TextChoices):
+        OPEN = "open", "Open"
+        REVIEWING = "reviewing", "Reviewing"
+        RESOLVED = "resolved", "Resolved"
+        DISMISSED = "dismissed", "Dismissed"
+
+    reporter = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reports_made")
+    reported_user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reports_received",
+    )
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey("content_type", "object_id")
+    reason = models.CharField(max_length=20, choices=Reason.choices)
+    details = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.OPEN)
+    created_at = models.DateTimeField(auto_now_add=True)
+    reviewed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reports_reviewed",
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    resolution_note = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Report {self.pk} by {self.reporter}"
 
 
 class Notification(models.Model):
@@ -221,3 +310,19 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user} ({self.verb})"
+
+
+def is_blocked(user_a, user_b) -> bool:
+    if not user_a or not user_b:
+        return False
+    return Block.objects.filter(
+        Q(blocker=user_a, blocked=user_b) | Q(blocker=user_b, blocked=user_a)
+    ).exists()
+
+
+def blocked_user_ids(user):
+    if not user or not getattr(user, "is_authenticated", False):
+        return []
+    blocked_ids = Block.objects.filter(blocker=user).values_list("blocked_id", flat=True)
+    blocker_ids = Block.objects.filter(blocked=user).values_list("blocker_id", flat=True)
+    return list(blocked_ids.union(blocker_ids))

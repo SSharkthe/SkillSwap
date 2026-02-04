@@ -1,0 +1,31 @@
+{% extends 'skillswap/base.html' %}
+
+{% block title %}Report · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-soft">
+    <div class="card-body">
+        <h2 class="fw-semibold">Report Content</h2>
+        <p class="text-muted">Tell us what's wrong so we can review it quickly.</p>
+        <div class="border rounded-3 p-3 mb-4 bg-light">
+            <div class="text-muted small mb-1">Reporting:</div>
+            <div>
+                {% if target.title %}
+                    <strong>{{ target.title }}</strong>
+                {% elif target.user %}
+                    <strong>{{ target.user.username }}</strong>
+                {% elif target.sender %}
+                    <strong>{{ target.sender.username }}</strong>
+                {% else %}
+                    <strong>{{ target }}</strong>
+                {% endif %}
+            </div>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-danger">Submit Report</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

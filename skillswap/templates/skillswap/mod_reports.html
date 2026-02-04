@@ -1,0 +1,35 @@
+{% extends 'skillswap/base.html' %}
+
+{% block title %}Moderation · Reports · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-soft">
+    <div class="card-body">
+        <h2 class="fw-semibold mb-4">Open Reports</h2>
+        {% if reports %}
+            <div class="list-group list-group-flush">
+                {% for report in reports %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-semibold">{{ report.get_reason_display }}</div>
+                                <div class="text-muted small">
+                                    {{ report.created_at|date:"M d, Y" }}
+                                    · Reporter: {{ report.reporter.username }}
+                                    {% if report.reported_user %}· Reported: {{ report.reported_user.username }}{% endif %}
+                                </div>
+                                {% if report.details %}
+                                    <p class="mb-0">{{ report.details|truncatechars:140 }}</p>
+                                {% endif %}
+                            </div>
+                            <span class="badge text-bg-warning">{{ report.get_status_display }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">No open reports.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

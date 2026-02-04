@@ -31,10 +31,29 @@
                 </div>
                 {% if profile.user == user %}
                     <a href="{% url 'skillswap:profile-edit' %}" class="btn btn-outline-primary">Edit Profile</a>
+                {% else %}
+                    <div class="d-flex gap-2">
+                        <form method="post" action="{% url 'skillswap:block-toggle' profile.user.username %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button type="submit" class="btn btn-outline-danger">
+                                {% if has_blocked %}Unblock{% else %}Block{% endif %}
+                            </button>
+                        </form>
+                        <a class="btn btn-outline-secondary"
+                           href="{% url 'skillswap:report-profile' profile.user.username %}">
+                            Report
+                        </a>
+                    </div>
                 {% endif %}
             </div>
         </div>
     </div>
+    {% if is_blocked %}
+        <div class="alert alert-warning mt-3 mb-0">
+            You cannot interact with this user because one of you has blocked the other.
+        </div>
+    {% endif %}
     <div class="card border-0 shadow-soft mt-4">
         <div class="card-body">
             <h5 class="fw-semibold">Skills</h5>

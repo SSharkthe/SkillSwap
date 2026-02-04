@@ -19,6 +19,9 @@ form learning partnerships.
 - Match invitations with accept/reject/completed status
 - Post-match ratings and feedback between participants
 - Explore requests and users with search/filter
+- Blocklist (blacklist) to prevent unwanted interactions
+- Internal inbox messaging after match acceptance
+- Reporting system for requests, profiles, and messages (admin review)
 
 ## Setup
 
@@ -62,6 +65,9 @@ python manage.py test
 6. Accept, reject, or complete matches from your dashboard.
 7. Bookmark requests to keep a personalized list at `/bookmarks/`.
 8. Review personalized recommendations at `/recommendations/` and notifications at `/notifications/`.
+9. Open the inbox at `/inbox/` to chat after a match is accepted.
+10. Use `/blocked/` to review your blocked users and manage your blocklist.
+11. Report inappropriate content from request, profile, or inbox pages.
 4. Review recommended partners based on your wants.
 5. Create a learning request tied to a skill.
 6. Explore requests or users and send match invitations.
@@ -79,6 +85,24 @@ python manage.py test
 
 - Match invites and status changes (accepted/rejected/completed) trigger notifications for the relevant users.
 - Visit `/notifications/` to review them and mark items as read.
+
+## Blocklist (Blacklist)
+
+- Block or unblock a user from their profile page.
+- Blocked users are excluded from explore/recommendations and cannot invite or message each other.
+- Review your list at `/blocked/`.
+
+## Inbox Messaging
+
+- When a match is accepted, a private conversation is created automatically.
+- Visit `/inbox/` to view conversations and send messages.
+- If a block exists, you can still view history but cannot send new messages.
+
+## Reporting & Moderation
+
+- Use "Report" links on requests, profiles, and inbox messages to submit a report.
+- View your submitted reports at `/my-reports/`.
+- Staff can review open reports in the admin or `/moderation/reports/`.
 
 ## Activity Tracking
 

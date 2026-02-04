@@ -3,61 +3,74 @@
 {% block title %}Request Detail · SkillSwap{% endblock %}
 
 {% block content %}
-<div class="card border-0 shadow-soft mb-4">
-    <div class="card-body">
-        <div class="d-flex justify-content-between">
-            <div>
-                <h3 class="fw-semibold">{{ request_obj.title }}</h3>
-                <p class="text-muted">
-                    {{ request_obj.skill.name }}
-                    · <i class="bi {{ request_obj.skill.category_icon }} me-1"></i>{{ request_obj.skill.category|title }}
-                </p>
+    <div class="card border-0 shadow-soft mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h3 class="fw-semibold">{{ request_obj.title }}</h3>
+                    <p class="text-muted">
+                        {{ request_obj.skill.name }}
+                        · <i
+                            class="bi {{ request_obj.skill.category_icon }} me-1"></i>{{ request_obj.skill.category|title }}
+                    </p>
+                </div>
+                <div class="d-flex align-items-start gap-2">
+                    <form method="post" action="{% url 'skillswap:request-bookmark' request_obj.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                aria-label="{% if is_bookmarked %}Remove bookmark{% else %}Add bookmark{% endif %}">
+                            {% if is_bookmarked %}
+                                <i class="bi bi-star-fill text-warning"></i>
+                            {% else %}
+                                <i class="bi bi-star"></i>
+                            {% endif %}
+                        </button>
+                    </form>
+                    <a class="btn btn-sm btn-outline-secondary"
+                       href="{% url 'skillswap:report-request' request_obj.pk %}">
+                        Report
+                    </a>
+                </div>
+                <span class="badge status-badge status-{{ request_obj.status }}">{{ request_obj.status|title }}</span>
             </div>
-            <div class="d-flex align-items-start gap-2">
-                <form method="post" action="{% url 'skillswap:request-bookmark' request_obj.pk %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                    <button type="submit" class="btn btn-sm btn-outline-secondary"
-                            aria-label="{% if is_bookmarked %}Remove bookmark{% else %}Add bookmark{% endif %}">
-                        {% if is_bookmarked %}
-                            <i class="bi bi-star-fill text-warning"></i>
-                        {% else %}
-                            <i class="bi bi-star"></i>
-                        {% endif %}
-                    </button>
-                </form>
-            </div>
-            <span class="badge status-badge status-{{ request_obj.status }}">{{ request_obj.status|title }}</span>
-        </div>
-        <p>{{ request_obj.description }}</p>
-        <p class="text-muted"><strong>Preferred time:</strong> {{ request_obj.preferred_time|default:'Flexible' }}</p>
-        <p class="text-muted"><strong>Owner:</strong> {{ request_obj.user.username }}</p>
-        {% if can_edit %}
-            <div class="d-flex gap-2">
-                <a href="{% url 'skillswap:request-edit' request_obj.pk %}" class="btn btn-outline-primary">Edit</a>
-                {% if request_obj.status == 'open' %}
-                    <a href="{% url 'skillswap:request-close' request_obj.pk %}" class="btn btn-outline-danger">Close</a>
-                {% endif %}
-            </div>
-        {% else %}
-            {% if request_obj.status == 'open' %}
-                <form method="post" action="{% url 'skillswap:match-create' request_obj.pk %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-primary" {% if existing_match %}disabled{% endif %}>
-                        {% if existing_match %}Invitation Pending{% else %}Send Match Invite{% endif %}
-                    </button>
-                </form>
-            {% endif %}
-        {% endif %}
-    </div>
-</div>
+            <p>{{ request_obj.description }}</p>
+            <p class="text-muted"><strong>Preferred time:</strong> {{ request_obj.preferred_time|default:'Flexible' }}
+            </p>
+            <p class="text-muted"><strong>Owner:</strong> {{ request_obj.user.username }}</p>
+            {% if can_edit %}
+                <div class="d-flex gap-2">
+                    <a href="{% url 'skillswap:request-edit' request_obj.pk %}" class="btn btn-outline-primary">Edit</a>
+                    {% if is_blocked %}
+                        <div class="alert alert-warning">You cannot invite this user because one of you has blocked the
+                            other.
+                        </div>
+                    {% elif request_obj.status == 'open' %}
 
-<div class="card border-0 shadow-soft">
-    <div class="card-body">
-        <h5 class="fw-semibold">About the Request Owner</h5>
-        <p class="text-muted mb-1">{{ request_obj.user.profile.preferred_mode|title }} · {{ request_obj.user.profile.location|default:'Location not set' }}</p>
-        <p>{{ request_obj.user.profile.bio|default:'No bio yet.' }}</p>
-        <a href="{% url 'skillswap:profile-detail' request_obj.user.username %}" class="btn btn-sm btn-outline-secondary">View Profile</a>
+                        <a href="{% url 'skillswap:request-close' request_obj.pk %}" class="btn btn-outline-danger">Close</a>
+                    {% endif %}
+                </div>
+            {% else %}
+                {% if request_obj.status == 'open' %}
+                    <form method="post" action="{% url 'skillswap:match-create' request_obj.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary" {% if existing_match %}disabled{% endif %}>
+                            {% if existing_match %}Invitation Pending{% else %}Send Match Invite{% endif %}
+                        </button>
+                    </form>
+                {% endif %}
+            {% endif %}
+        </div>
     </div>
-</div>
+
+    <div class="card border-0 shadow-soft">
+        <div class="card-body">
+            <h5 class="fw-semibold">About the Request Owner</h5>
+            <p class="text-muted mb-1">{{ request_obj.user.profile.preferred_mode|title }}
+                · {{ request_obj.user.profile.location|default:'Location not set' }}</p>
+            <p>{{ request_obj.user.profile.bio|default:'No bio yet.' }}</p>
+            <a href="{% url 'skillswap:profile-detail' request_obj.user.username %}"
+               class="btn btn-sm btn-outline-secondary">View Profile</a>
+        </div>
+    </div>
 {% endblock %}

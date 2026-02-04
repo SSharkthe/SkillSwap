@@ -1,11 +1,12 @@
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError
 from django.test import TestCase
 from django.urls import reverse
 
 from django.utils import timezone
 
-from .models import Feedback, Match, Notification, Request, Skill, UserSkill
+from .models import Block, Conversation, Feedback, Match, Message, Notification, Report, Request, Skill, UserSkill
 
 User = get_user_model()
 
@@ -325,4 +326,168 @@ class SkillSwapTests(TestCase):
     def test_password_change_page_for_logged_in_user(self):
         self.client.login(username='alice', password='password123')
         response = self.client.get(reverse('password_change'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_block_toggle_requires_login(self):
+        response = self.client.post(reverse('skillswap:block-toggle', args=[self.other.username]))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('login'), response.url)
+
+    def test_block_toggle_creates_and_deletes(self):
+        self.client.login(username='alice', password='password123')
+        response = self.client.post(reverse('skillswap:block-toggle', args=[self.other.username]))
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Block.objects.filter(blocker=self.user, blocked=self.other).exists())
+        response = self.client.post(reverse('skillswap:block-toggle', args=[self.other.username]))
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Block.objects.filter(blocker=self.user, blocked=self.other).exists())
+
+    def test_explore_lists_exclude_blocked_users(self):
+        Block.objects.create(blocker=self.user, blocked=self.other)
+        other_request = Request.objects.create(
+            user=self.other,
+            skill=self.skill,
+            title='Need Python help',
+            description='Functions and classes',
+            status='open',
+        )
+        self.client.login(username='alice', password='password123')
+        response = self.client.get(reverse('skillswap:explore-users'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(self.other, list(response.context['users']))
+
+        response = self.client.get(reverse('skillswap:explore-requests'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(other_request, list(response.context['requests']))
+
+    def test_match_invite_blocked_forbidden(self):
+        request_obj = Request.objects.create(
+            user=self.other,
+            skill=self.skill,
+            title='Need Python help',
+            description='Functions and classes',
+            status='open',
+        )
+        Block.objects.create(blocker=self.user, blocked=self.other)
+        self.client.login(username='alice', password='password123')
+        response = self.client.post(reverse('skillswap:match-create', args=[request_obj.pk]))
+        self.assertEqual(response.status_code, 403)
+
+    def test_conversation_created_on_accept(self):
+        request_obj = Request.objects.create(
+            user=self.other,
+            skill=self.skill,
+            title='Need Python help',
+            description='Functions and classes',
+            status='open',
+        )
+        match = Match.objects.create(
+            request=request_obj,
+            requester=self.user,
+            partner=self.other,
+            status=Match.Status.PENDING,
+        )
+        self.client.login(username='bob', password='password123')
+        self.client.post(reverse('skillswap:match-action', args=[match.pk, 'accept']))
+        self.assertTrue(Conversation.objects.filter(match=match).exists())
+
+    def test_inbox_permissions_and_message_send(self):
+        request_obj = Request.objects.create(
+            user=self.other,
+            skill=self.skill,
+            title='Need Python help',
+            description='Functions and classes',
+            status='open',
+        )
+        match = Match.objects.create(
+            request=request_obj,
+            requester=self.user,
+            partner=self.other,
+            status=Match.Status.ACCEPTED,
+        )
+        conversation = Conversation.objects.create(match=match)
+        self.client.login(username='alice', password='password123')
+        response = self.client.post(
+            reverse('skillswap:inbox-send', args=[match.pk]),
+            {'body': 'Hello!'},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Message.objects.filter(conversation=conversation, sender=self.user).exists())
+
+        self.client.logout()
+        eve = User.objects.create_user(username='eve', password='password123')
+        self.client.login(username='eve', password='password123')
+        response = self.client.get(reverse('skillswap:inbox-detail', args=[match.pk]))
+        self.assertEqual(response.status_code, 403)
+
+    def test_blocked_message_send_forbidden(self):
+        request_obj = Request.objects.create(
+            user=self.other,
+            skill=self.skill,
+            title='Need Python help',
+            description='Functions and classes',
+            status='open',
+        )
+        match = Match.objects.create(
+            request=request_obj,
+            requester=self.user,
+            partner=self.other,
+            status=Match.Status.ACCEPTED,
+        )
+        Conversation.objects.create(match=match)
+        Block.objects.create(blocker=self.other, blocked=self.user)
+        self.client.login(username='alice', password='password123')
+        response = self.client.post(reverse('skillswap:inbox-send', args=[match.pk]), {'body': 'Hello'})
+        self.assertEqual(response.status_code, 403)
+
+    def test_inbox_marks_messages_read(self):
+        request_obj = Request.objects.create(
+            user=self.other,
+            skill=self.skill,
+            title='Need Python help',
+            description='Functions and classes',
+            status='open',
+        )
+        match = Match.objects.create(
+            request=request_obj,
+            requester=self.user,
+            partner=self.other,
+            status=Match.Status.ACCEPTED,
+        )
+        conversation = Conversation.objects.create(match=match)
+        message = Message.objects.create(conversation=conversation, sender=self.other, body='Ping')
+        self.client.login(username='alice', password='password123')
+        response = self.client.get(reverse('skillswap:inbox-detail', args=[match.pk]))
+        self.assertEqual(response.status_code, 200)
+        message.refresh_from_db()
+        self.assertTrue(message.is_read)
+
+    def test_report_creation_and_visibility(self):
+        request_obj = Request.objects.create(
+            user=self.other,
+            skill=self.skill,
+            title='Need Python help',
+            description='Functions and classes',
+            status='open',
+        )
+        ct = ContentType.objects.get_for_model(Request)
+        self.client.login(username='alice', password='password123')
+        response = self.client.post(
+            f"{reverse('skillswap:report')}?ct={ct.pk}&oid={request_obj.pk}",
+            {'reason': Report.Reason.SPAM, 'details': 'Spam content.'},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Report.objects.filter(reporter=self.user, object_id=request_obj.pk).exists())
+
+        response = self.client.get(reverse('skillswap:my-reports'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Spam')
+
+    def test_moderation_requires_staff(self):
+        self.client.login(username='alice', password='password123')
+        response = self.client.get(reverse('skillswap:mod-reports'))
+        self.assertEqual(response.status_code, 302)
+        self.user.is_staff = True
+        self.user.save(update_fields=['is_staff'])
+        response = self.client.get(reverse('skillswap:mod-reports'))
         self.assertEqual(response.status_code, 200)
