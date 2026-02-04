@@ -28,6 +28,16 @@
                                         <div class="text-muted small">
                                             <i class="bi {{ item.skill.category_icon }} me-1"></i>{{ item.skill.category|title }}
                                         </div>
+                                        {% if item.learning_months or item.self_rating %}
+                                            <div class="text-muted small">
+                                                {% if item.learning_months %}
+                                                    {{ item.learning_months }} month{{ item.learning_months|pluralize }}
+                                                {% endif %}
+                                                {% if item.self_rating %}
+                                                    <span class="ms-2">Self rating: {{ item.self_rating }}/5</span>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
                                     </div>
                                     <div class="d-flex gap-2">
                                         <a href="{% url 'skillswap:user-skill-edit' item.pk %}"
@@ -60,6 +70,16 @@
                                         <div class="text-muted small">
                                             <i class="bi {{ item.skill.category_icon }} me-1"></i>{{ item.skill.category|title }}
                                         </div>
+                                        {% if item.learning_months or item.self_rating %}
+                                            <div class="text-muted small">
+                                                {% if item.learning_months %}
+                                                    {{ item.learning_months }} month{{ item.learning_months|pluralize }}
+                                                {% endif %}
+                                                {% if item.self_rating %}
+                                                    <span class="ms-2">Self rating: {{ item.self_rating }}/5</span>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
                                     </div>
                                     <div class="d-flex gap-2">
                                         <a href="{% url 'skillswap:user-skill-edit' item.pk %}"

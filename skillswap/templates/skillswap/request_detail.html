@@ -26,8 +26,8 @@
                         {% endif %}
                     </button>
                 </form>
-                <span class="badge status-badge status-{{ request_obj.status }}">{{ request_obj.status|title }}</span>
             </div>
+            <span class="badge status-badge status-{{ request_obj.status }}">{{ request_obj.status|title }}</span>
         </div>
         <p>{{ request_obj.description }}</p>
         <p class="text-muted"><strong>Preferred time:</strong> {{ request_obj.preferred_time|default:'Flexible' }}</p>

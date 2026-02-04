@@ -79,7 +79,11 @@ class UserSkillForm(BootstrapFormMixin, forms.ModelForm):
 
     class Meta:
         model = UserSkill
-        fields = ('skill', 'type', 'level')
+        fields = ('skill', 'type', 'level', 'learning_months', 'self_rating')
+        help_texts = {
+            'learning_months': 'Optional. Total months spent learning or practicing.',
+            'self_rating': 'Optional. Rate your confidence from 1 (low) to 5 (high).',
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

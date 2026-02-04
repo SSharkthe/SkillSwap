@@ -15,6 +15,7 @@ form learning partnerships.
 - Recommended partners based on matching wants/offers
 - Learning requests linked to skills
 - Bookmarked requests saved under "My Bookmarks"
+- Notifications for match invitations and status updates
 - Match invitations with accept/reject/completed status
 - Post-match ratings and feedback between participants
 - Explore requests and users with search/filter
@@ -60,6 +61,7 @@ python manage.py test
 5. Explore requests or users and send match invitations.
 6. Accept, reject, or complete matches from your dashboard.
 7. Bookmark requests to keep a personalized list at `/bookmarks/`.
+8. Review personalized recommendations at `/recommendations/` and notifications at `/notifications/`.
 4. Review recommended partners based on your wants.
 5. Create a learning request tied to a skill.
 6. Explore requests or users and send match invitations.
@@ -69,13 +71,22 @@ python manage.py test
 ## Recommendations & Feedback
 
 - Recommendations are computed by comparing your "want" skills with other users' "offer" skills.
-  Users are ranked by the number of overlapping skills, then by profile completeness and username.
+  Users are ranked by overlap score (want/offer overlap plus mutual overlap).
 - Feedback can be left only after a match is marked completed, once per participant.
   Ratings are shown on profile pages along with recent comments.
+
+## Notifications
+
+- Match invites and status changes (accepted/rejected/completed) trigger notifications for the relevant users.
+- Visit `/notifications/` to review them and mark items as read.
+
+## Activity Tracking
+
+- A custom middleware updates `last_active` and `last_path` on profiles for authenticated users.
+- Updates are throttled to once per 60 seconds to reduce database writes.
 
 ## Demo Screenshot Notes
 
 - Landing page with academic hero and preview cards.
 - Dashboard overview showing skills, requests, and match status badges.
-- Explore pages with filters for requests and users.
 - Explore pages with filters for requests and users.

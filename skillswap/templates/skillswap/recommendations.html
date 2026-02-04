@@ -48,7 +48,12 @@
                                         · {{ partner.profile.location|default:'Location not set' }}
                                     </div>
                                 </div>
-                                <span class="badge text-bg-primary-subtle text-primary">{{ partner.overlap_count }} match{{ partner.overlap_count|pluralize }}</span>
+                                <div class="text-end">
+                                    <div class="badge text-bg-primary-subtle text-primary">
+                                        Score {{ partner.final_score }}</div>
+                                    <div class="text-muted small">{{ partner.overlap_want_offer }}
+                                        overlap{{ partner.overlap_want_offer|pluralize }}</div>
+                                </div>
                             </div>
                             <div class="mb-3">
                                 <div class="text-muted small mb-2">Overlapping skills</div>
@@ -56,6 +61,9 @@
                                     {% for offer in partner.matching_offers|slice:":3" %}
                                         <span class="badge text-bg-light text-dark border">{{ offer.skill.name }}</span>
                                     {% endfor %}
+                                {% if not partner.matching_offers %}
+                                        <span class="text-muted small">No overlapping skills listed.</span>
+                                    {% endif %}
                                 </div>
                             </div>
                             <a href="{% url 'skillswap:profile-detail' partner.username %}"

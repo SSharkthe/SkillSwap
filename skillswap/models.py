@@ -23,11 +23,20 @@ class Profile(models.Model):
     )
     location = models.CharField(max_length=120, blank=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    skills = models.ManyToManyField(
+        'Skill',
+        through='UserSkill',
+        through_fields=('profile', 'skill'),
+        related_name='profiles',
+        blank=True,
+    )
     bookmarked_requests = models.ManyToManyField(
         'Request',
         blank=True,
         related_name='bookmarked_by',
     )
+    last_active = models.DateTimeField(null=True, blank=True)
+    last_path = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return f"Profile for {self.user.username}"
@@ -82,9 +91,22 @@ class UserSkill(models.Model):
         ADVANCED = 'advanced', 'Advanced'
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_skills')
+    profile = models.ForeignKey(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name='profile_skills',
+        null=True,
+        blank=True,
+    )
     skill = models.ForeignKey(Skill, on_delete=models.CASCADE, related_name='user_skills')
     type = models.CharField(max_length=10, choices=SkillType.choices)
     level = models.CharField(max_length=12, choices=SkillLevel.choices)
+    learning_months = models.PositiveSmallIntegerField(null=True, blank=True)
+    self_rating = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -95,6 +117,11 @@ class UserSkill(models.Model):
 
     def __str__(self):
         return f"{self.user.username}: {self.skill.name} ({self.type})"
+
+    def save(self, *args, **kwargs):
+        if self.profile is None and self.user_id:
+            self.profile = self.user.profile
+        super().save(*args, **kwargs)
 
 
 class Request(models.Model):
@@ -169,3 +196,28 @@ class Feedback(models.Model):
 
     def __str__(self):
         return f"Feedback from {self.rater} to {self.ratee} ({self.rating})"
+
+
+class Notification(models.Model):
+    class Verb(models.TextChoices):
+        INVITE_SENT = 'invite_sent', 'Invite sent'
+        INVITE_ACCEPTED = 'invite_accepted', 'Invite accepted'
+        INVITE_REJECTED = 'invite_rejected', 'Invite rejected'
+        MATCH_COMPLETED = 'match_completed', 'Match completed'
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    actor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                              related_name='acted_notifications')
+    match = models.ForeignKey('Match', on_delete=models.SET_NULL, null=True, blank=True, related_name='notifications')
+    request = models.ForeignKey('Request', on_delete=models.SET_NULL, null=True, blank=True,
+                                related_name='notifications')
+    verb = models.CharField(max_length=30, choices=Verb.choices)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification for {self.user} ({self.verb})"
