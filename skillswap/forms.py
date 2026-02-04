@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
-from .models import Feedback, Match, Profile, Request, Skill, UserSkill
+from .models import Feedback, Match, Message, Profile, Report, Request, Skill, UserSkill
 
 User = get_user_model()
 
@@ -154,6 +154,32 @@ class FeedbackForm(BootstrapFormMixin, forms.ModelForm):
         fields = ('rating', 'comment')
         widgets = {
             'comment': forms.Textarea(attrs={'rows': 3, 'maxlength': 300}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._apply_bootstrap()
+
+
+class MessageForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = Message
+        fields = ('body',)
+        widgets = {
+            'body': forms.Textarea(attrs={'rows': 3, 'maxlength': 2000}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._apply_bootstrap()
+
+
+class ReportForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = Report
+        fields = ('reason', 'details')
+        widgets = {
+            'details': forms.Textarea(attrs={'rows': 4}),
         }
 
     def __init__(self, *args, **kwargs):

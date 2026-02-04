@@ -1,0 +1,40 @@
+{% extends 'skillswap/base.html' %}
+
+{% block title %}Blocked Users · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-soft">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="fw-semibold mb-0">Blocked Users</h2>
+            <span class="text-muted small">{{ blocked_users|length }} total</span>
+        </div>
+        {% if blocked_users %}
+            <div class="list-group list-group-flush">
+                {% for blocked_user in blocked_users %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ blocked_user.username }}</strong>
+                            <div class="text-muted small">
+                                {{ blocked_user.profile.preferred_mode|title }}
+                                · {{ blocked_user.profile.location|default:"Location not set" }}
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'skillswap:profile-detail' blocked_user.username %}"
+                               class="btn btn-sm btn-outline-secondary">View Profile</a>
+                            <form method="post" action="{% url 'skillswap:block-toggle' blocked_user.username %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Unblock</button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">You have not blocked anyone.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

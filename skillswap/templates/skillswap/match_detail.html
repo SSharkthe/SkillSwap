@@ -37,6 +37,12 @@
                         {% csrf_token %}
                         <button class="btn btn-success" type="submit">Mark Completed</button>
                     </form>
+                    {% if is_blocked %}
+                        <span class="badge text-bg-warning align-self-center">Chat disabled (blocked)</span>
+                    {% else %}
+                        <a href="{% url 'skillswap:inbox-detail' match.pk %}" class="btn btn-outline-primary">Open
+                            Chat</a>
+                    {% endif %}
                 {% endif %}
                 <a href="{% url 'skillswap:match-list' %}" class="btn btn-outline-secondary">Back to Matches</a>
             </div>

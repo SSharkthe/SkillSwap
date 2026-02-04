@@ -1,0 +1,43 @@
+{% extends 'skillswap/base.html' %}
+
+{% block title %}Inbox · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-soft">
+    <div class="card-body">
+        <h2 class="fw-semibold mb-4">Inbox</h2>
+        {% if conversations %}
+            <div class="list-group list-group-flush">
+                {% for conversation in conversations %}
+                    <a href="{% url 'skillswap:inbox-detail' conversation.match.pk %}"
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fw-semibold">{{ conversation.counterpart.username }}</div>
+                            <div class="text-muted small">
+                                {{ conversation.match.request.title }}
+                            </div>
+                            <div class="small">
+                                {% if conversation.last_message %}
+                                    {{ conversation.last_message.body|truncatechars:80 }}
+                                {% else %}
+                                    No messages yet.
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            {% if conversation.last_message_at %}
+                                <div class="text-muted small">{{ conversation.last_message_at|date:"M d, Y" }}</div>
+                            {% endif %}
+                            {% if conversation.unread_count %}
+                                <span class="badge text-bg-primary">{{ conversation.unread_count }} new</span>
+                            {% endif %}
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">No conversations yet. Once a match is accepted, you can chat here.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

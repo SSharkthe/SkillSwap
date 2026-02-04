@@ -31,6 +31,16 @@
                     <li class="nav-item"><a class="nav-link" href="{% url 'skillswap:recommendations' %}">Recommendations</a>
                     </li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'skillswap:match-list' %}">Matches</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="{% url 'skillswap:inbox' %}">
+                            Inbox
+                            {% if unread_messages_count %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    {{ unread_messages_count }}
+                                </span>
+                            {% endif %}
+                        </a>
+                    </li>
                 {% endif %}
             </ul>
             <ul class="navbar-nav ms-auto">
@@ -66,6 +76,8 @@
                             <li><a class="dropdown-item" href="{% url 'skillswap:profile-detail' user.username %}">Profile</a>
                             </li>
                             <li><a class="dropdown-item" href="{% url 'skillswap:bookmarks' %}">My Bookmarks</a></li>
+                            <li><a class="dropdown-item" href="{% url 'skillswap:blocked-list' %}">Blocked Users</a></li>
+                            <li><a class="dropdown-item" href="{% url 'skillswap:my-reports' %}">My Reports</a></li>
                             <li><a class="dropdown-item" href="{% url 'password_change' %}">Change Password</a></li>
                             <li>
                                 <hr class="dropdown-divider">

@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
-from .models import Match, Notification, Profile
+from .models import Conversation, Match, Notification, Profile
 
 User = get_user_model()
 
@@ -43,6 +43,7 @@ def notify_match_updates(sender, instance, created, **kwargs):
         return
 
     if instance.status == Match.Status.ACCEPTED:
+        Conversation.objects.get_or_create(match=instance)
         Notification.objects.create(
             user=instance.requester,
             actor=instance.partner,

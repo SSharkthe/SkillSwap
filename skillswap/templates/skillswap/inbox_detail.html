@@ -1,0 +1,57 @@
+{% extends 'skillswap/base.html' %}
+
+{% block title %}Chat · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-soft mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h3 class="fw-semibold mb-1">Chat with {{ counterpart.username }}</h3>
+                <p class="text-muted mb-0">{{ match.request.title }}</p>
+            </div>
+            <a href="{% url 'skillswap:inbox' %}" class="btn btn-outline-secondary">Back to Inbox</a>
+        </div>
+    </div>
+</div>
+
+{% if is_blocked %}
+    <div class="alert alert-warning">You can view past messages, but new messages are disabled due to a block.</div>
+{% endif %}
+
+<div class="card border-0 shadow-soft mb-4">
+    <div class="card-body">
+        {% if conversation_messages %}
+            <div class="d-flex flex-column gap-3">
+                {% for entry in conversation_messages %}
+                    <div class="border rounded-3 p-3 {% if entry.sender == user %}bg-light{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong>{{ entry.sender.username }}</strong>
+                            <span class="text-muted small">{{ entry.created_at|date:"M d, Y H:i" }}</span>
+                        </div>
+                        <p class="mb-2">{{ entry.body }}</p>
+                        <a class="small text-muted" href="{% url 'skillswap:report-message' entry.pk %}">Report</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">No messages yet. Say hello!</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card border-0 shadow-soft">
+    <div class="card-body">
+        <h5 class="fw-semibold">Send a message</h5>
+        {% if is_blocked %}
+            <p class="text-muted mb-0">Messaging is disabled because one of you has blocked the other.</p>
+        {% else %}
+            <form method="post" action="{% url 'skillswap:inbox-send' match.pk %}">
+                {% csrf_token %}
+                {{ message_form.as_p }}
+                <button type="submit" class="btn btn-primary">Send</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
