@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Feedback, Match, Profile, Request, Skill, UserSkill
+from .models import Feedback, Match, Notification, Profile, Request, Skill, UserSkill
 
 
 @admin.register(Profile)
@@ -42,3 +42,10 @@ class FeedbackAdmin(admin.ModelAdmin):
     list_display = ('match', 'rater', 'ratee', 'rating', 'created_at')
     list_filter = ('rating',)
     search_fields = ('match__request__title', 'rater__username', 'ratee__username')
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'verb', 'is_read', 'created_at')
+    list_filter = ('is_read', 'verb')
+    search_fields = ('user__username', 'actor__username', 'message')

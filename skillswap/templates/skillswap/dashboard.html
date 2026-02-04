@@ -107,77 +107,36 @@
         </div>
         <div class="col-lg-6">
             <div class="card border-0 shadow-soft h-100">
-                <div class="card-header bg-white border-0">
-                    <h5 class="mb-0">My Matches</h5>
-                </div>
-                <div class="card-body">
-                    {% if matches %}
-                        <ul class="list-group list-group-flush">
-                            {% for match in matches|slice:":5" %}
-                                <li class="list-group-item">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <strong>{{ match.request.title }}</strong>
-                                            <div class="text-muted small">
-                                                Partner:
-                                                {% if match.requester == user %}
-                                                    {{ match.partner.username }}
-                                                {% else %}
-                                                    {{ match.requester.username }}
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        <span class="badge status-badge status-{{ match.status }}">{{ match.status|title }}</span>
-                                    </div>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p class="text-muted">No matches yet. Explore requests and send an invite.</p>
-                    {% endif %}
-                    <a href="{% url 'skillswap:match-list' %}" class="btn btn-sm btn-outline-primary mt-3">View All
-                        Matches</a>
-                </div>
-            </div>
-        </div>
+    <div class="card-header bg-white border-0">
+        <h5 class="mb-0">My Matches</h5>
     </div>
-    <div class="card border-0 shadow-soft mt-4">
-        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Recommended Partners</h5>
-            <a href="{% url 'skillswap:recommendations' %}" class="btn btn-sm btn-outline-primary">See all</a>
-        </div>
-        <div class="card-body">
-            {% if recommended_partners %}
-                <div class="row g-3">
-                    {% for partner in recommended_partners %}
-                        <div class="col-md-6 col-lg-4">
-                            <div class="border rounded-3 p-3 h-100">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <div>
-                                        <strong>{{ partner.username }}</strong>
-                                        <div class="text-muted small">
-                                            {{ partner.profile.preferred_mode|title }}
-                                            · {{ partner.profile.location|default:'Location not set' }}
-                                        </div>
-                                    </div>
-                                    <span class="badge text-bg-primary-subtle text-primary">{{ partner.overlap_count }} match{{ partner.overlap_count|pluralize }}</span>
+    <div class="card-body">
+        {% if matches %}
+            <ul class="list-group list-group-flush">
+                {% for match in matches|slice:":5" %}
+                    <li class="list-group-item px-0">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ match.request.title }}</strong>
+                                <div class="text-muted small">
+                                    Partner:
+                                    {% if match.requester == user %}
+                                        {{ match.partner.username }}
+                                    {% else %}
+                                        {{ match.requester.username }}
+                                    {% endif %}
                                 </div>
-                                <div class="text-muted small mb-2">
-                                    {% for offer in partner.matching_offers|slice:":3" %}
-                                        <span class="badge text-bg-light text-dark border">{{ offer.skill.name }}</span>
-                                    {% empty %}
-                                        No overlapping skills yet.
-                                    {% endfor %}
-                                </div>
-                                <a href="{% url 'skillswap:profile-detail' partner.username %}"
-                                   class="btn btn-sm btn-outline-secondary">View Profile</a>
                             </div>
+                            <span class="badge rounded-pill text-bg-light">{{ match.get_status_display }}</span>
                         </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="text-muted mb-0">No recommendations yet. Add wants to see suggested partners.</p>
-            {% endif %}
-        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+            <a href="{% url 'skillswap:match-list' %}" class="btn btn-sm btn-outline-primary mt-3">View All Matches</a>
+        {% else %}
+            <p class="text-muted mb-0">No matches yet. Explore requests to get started.</p>
+        {% endif %}
     </div>
+</div>
+
 {% endblock %}

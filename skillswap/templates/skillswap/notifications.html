@@ -1,0 +1,50 @@
+{% extends 'skillswap/base.html' %}
+
+{% block title %}Notifications · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-semibold">Notifications</h2>
+        <p class="text-muted mb-0">Stay up to date on match activity and invites.</p>
+    </div>
+</div>
+
+{% if notifications %}
+    <div class="list-group shadow-soft">
+        {% for note in notifications %}
+            <div class="list-group-item border-0 border-bottom">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="fw-semibold">{{ note.message }}</div>
+                        <div class="text-muted small">
+                            {{ note.created_at|date:"M j, Y · H:i" }}
+                            {% if note.match %}
+                                · Match: {{ note.match.request.title }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        {% if not note.is_read %}
+                            <span class="badge text-bg-warning">Unread</span>
+                        {% endif %}
+                        <form method="post" action="{% url 'skillswap:notification-read' note.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">Mark read</button>
+                        </form>
+                    </div>
+                </div>
+                {% if note.request %}
+                    <a href="{{ note.request.get_absolute_url }}" class="btn btn-link ps-0">View request</a>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card border-0 shadow-soft">
+        <div class="card-body">
+            <p class="text-muted mb-0">You're all caught up. New notifications will appear here.</p>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
