@@ -319,10 +319,9 @@ def is_blocked(user_a, user_b) -> bool:
         Q(blocker=user_a, blocked=user_b) | Q(blocker=user_b, blocked=user_a)
     ).exists()
 
-
 def blocked_user_ids(user):
     if not user or not getattr(user, "is_authenticated", False):
         return []
-    blocked_ids = Block.objects.filter(blocker=user).values_list("blocked_id", flat=True)
-    blocker_ids = Block.objects.filter(blocked=user).values_list("blocker_id", flat=True)
+    blocked_ids = Block.objects.filter(blocker=user).values_list("blocked_id", flat=True).order_by()
+    blocker_ids = Block.objects.filter(blocked=user).values_list("blocker_id", flat=True).order_by()
     return list(blocked_ids.union(blocker_ids))
