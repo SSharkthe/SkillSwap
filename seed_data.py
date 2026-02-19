@@ -2,6 +2,11 @@
 """
 SkillSwap 数据填充脚本
 生成大量测试数据用于界面测试
+
+安全改造（方案 A）：
+- 默认不创建管理员（避免固定密码 admin/admin123）
+- 仅当设置 SEED_CREATE_ADMIN=1 时才创建管理员
+  并且必须提供 SEED_ADMIN_PASSWORD（不会写死到代码里）
 """
 
 import os
@@ -11,80 +16,224 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 
 # 设置 Django 环境
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import django
+import django  # noqa: E402
 
 django.setup()
 
-from django.contrib.auth import get_user_model
-from django.db import IntegrityError
-from skillswap.models import (
-    Profile, Skill, UserSkill, Request, Match,
-    Block, Feedback, Notification, Conversation, Message,
-    Report
+from django.contrib.auth import get_user_model  # noqa: E402
+from django.db import IntegrityError  # noqa: E402
+from skillswap.models import (  # noqa: E402
+    Profile,
+    Skill,
+    UserSkill,
+    Request,
+    Match,
+    Block,
+    Feedback,
+    Notification,
+    Conversation,
+    Message,
+    Report,
 )
 
 User = get_user_model()
 
-# 配置参数
-NUM_USERS = 50
-NUM_SKILLS = 30
-NUM_REQUESTS = 80
-NUM_MATCHES = 60
-NUM_CONVERSATIONS = 40
-NUM_MESSAGES = 200
+# =========================
+# 可配置参数（可用环境变量覆盖）
+# =========================
+NUM_USERS = int(os.environ.get("SEED_NUM_USERS", "50"))
+NUM_REQUESTS = int(os.environ.get("SEED_NUM_REQUESTS", "80"))
+NUM_MATCHES = int(os.environ.get("SEED_NUM_MATCHES", "60"))
+NUM_CONVERSATIONS = int(os.environ.get("SEED_NUM_CONVERSATIONS", "40"))
+
+DEFAULT_USER_PASSWORD = os.environ.get("SEED_USER_PASSWORD", "testpass123")
 
 # 技能数据
 SKILL_CATEGORIES = {
-    'programming': [
-        'Python', 'JavaScript', 'Java', 'C++', 'Go', 'Rust',
-        'TypeScript', 'React', 'Vue.js', 'Django', 'Flask',
-        'Node.js', 'SQL', 'MongoDB', 'Docker', 'Kubernetes'
+    "programming": [
+        "Python",
+        "JavaScript",
+        "Java",
+        "C++",
+        "Go",
+        "Rust",
+        "TypeScript",
+        "React",
+        "Vue.js",
+        "Django",
+        "Flask",
+        "Node.js",
+        "SQL",
+        "MongoDB",
+        "Docker",
+        "Kubernetes",
     ],
-    'language': [
-        'English', 'Spanish', 'French', 'German', 'Japanese',
-        'Korean', 'Chinese', 'Italian', 'Portuguese', 'Russian'
+    "language": [
+        "English",
+        "Spanish",
+        "French",
+        "German",
+        "Japanese",
+        "Korean",
+        "Chinese",
+        "Italian",
+        "Portuguese",
+        "Russian",
     ],
-    'art': [
-        'Photography', 'Graphic Design', 'UI/UX Design',
-        'Illustration', 'Video Editing', '3D Modeling',
-        'Animation', 'Painting', 'Sketching'
+    "art": [
+        "Photography",
+        "Graphic Design",
+        "UI/UX Design",
+        "Illustration",
+        "Video Editing",
+        "3D Modeling",
+        "Animation",
+        "Painting",
+        "Sketching",
     ],
-    'music': [
-        'Guitar', 'Piano', 'Violin', 'Drums', 'Singing',
-        'Music Production', 'DJing', 'Music Theory', 'Bass'
+    "music": [
+        "Guitar",
+        "Piano",
+        "Violin",
+        "Drums",
+        "Singing",
+        "Music Production",
+        "DJing",
+        "Music Theory",
+        "Bass",
     ],
-    'sports': [
-        'Basketball', 'Soccer', 'Tennis', 'Swimming', 'Yoga',
-        'Running', 'Cycling', 'Climbing', 'Boxing', 'Martial Arts'
+    "sports": [
+        "Basketball",
+        "Soccer",
+        "Tennis",
+        "Swimming",
+        "Yoga",
+        "Running",
+        "Cycling",
+        "Climbing",
+        "Boxing",
+        "Martial Arts",
     ],
-    'other': [
-        'Cooking', 'Baking', 'Gardening', 'Chess', 'Public Speaking',
-        'Writing', 'Marketing', 'Finance', 'Psychology', 'First Aid'
-    ]
+    "other": [
+        "Cooking",
+        "Baking",
+        "Gardening",
+        "Chess",
+        "Public Speaking",
+        "Writing",
+        "Marketing",
+        "Finance",
+        "Psychology",
+        "First Aid",
+    ],
 }
 
 # 名字数据
 FIRST_NAMES = [
-    'Emma', 'Liam', 'Olivia', 'Noah', 'Ava', 'Ethan', 'Sophia', 'Mason',
-    'Isabella', 'William', 'Mia', 'James', 'Charlotte', 'Benjamin', 'Amelia',
-    'Lucas', 'Harper', 'Henry', 'Evelyn', 'Alexander', 'Abigail', 'Daniel',
-    'Emily', 'Matthew', 'Elizabeth', 'Jackson', 'Sofia', 'Sebastian', 'Avery',
-    'Jack', 'Ella', 'Owen', 'Madison', 'Samuel', 'Scarlett', 'David', 'Victoria',
-    'Joseph', 'Chloe', 'Carter', 'Grace', 'Wyatt', 'Zoey', 'John', 'Nora',
-    'Oliver', 'Lily', 'Gabriel', 'Hannah', 'Anthony'
+    "Emma",
+    "Liam",
+    "Olivia",
+    "Noah",
+    "Ava",
+    "Ethan",
+    "Sophia",
+    "Mason",
+    "Isabella",
+    "William",
+    "Mia",
+    "James",
+    "Charlotte",
+    "Benjamin",
+    "Amelia",
+    "Lucas",
+    "Harper",
+    "Henry",
+    "Evelyn",
+    "Alexander",
+    "Abigail",
+    "Daniel",
+    "Emily",
+    "Matthew",
+    "Elizabeth",
+    "Jackson",
+    "Sofia",
+    "Sebastian",
+    "Avery",
+    "Jack",
+    "Ella",
+    "Owen",
+    "Madison",
+    "Samuel",
+    "Scarlett",
+    "David",
+    "Victoria",
+    "Joseph",
+    "Chloe",
+    "Carter",
+    "Grace",
+    "Wyatt",
+    "Zoey",
+    "John",
+    "Nora",
+    "Oliver",
+    "Lily",
+    "Gabriel",
+    "Hannah",
+    "Anthony",
 ]
 
 LAST_NAMES = [
-    'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller',
-    'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez',
-    'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin',
-    'Lee', 'Perez', 'Thompson', 'White', 'Harris', 'Sanchez', 'Clark',
-    'Ramirez', 'Lewis', 'Robinson', 'Walker', 'Young', 'Allen', 'King',
-    'Wright', 'Scott', 'Torres', 'Nguyen', 'Hill', 'Flores', 'Green',
-    'Adams', 'Nelson', 'Baker', 'Hall', 'Rivera', 'Campbell', 'Mitchell'
+    "Smith",
+    "Johnson",
+    "Williams",
+    "Brown",
+    "Jones",
+    "Garcia",
+    "Miller",
+    "Davis",
+    "Rodriguez",
+    "Martinez",
+    "Hernandez",
+    "Lopez",
+    "Gonzalez",
+    "Wilson",
+    "Anderson",
+    "Thomas",
+    "Taylor",
+    "Moore",
+    "Jackson",
+    "Martin",
+    "Lee",
+    "Perez",
+    "Thompson",
+    "White",
+    "Harris",
+    "Sanchez",
+    "Clark",
+    "Ramirez",
+    "Lewis",
+    "Robinson",
+    "Walker",
+    "Young",
+    "Allen",
+    "King",
+    "Wright",
+    "Scott",
+    "Torres",
+    "Nguyen",
+    "Hill",
+    "Flores",
+    "Green",
+    "Adams",
+    "Nelson",
+    "Baker",
+    "Hall",
+    "Rivera",
+    "Campbell",
+    "Mitchell",
 ]
 
 # 标题和描述模板
@@ -98,7 +247,7 @@ REQUEST_TITLES = [
     "{skill} exchange - I can teach you {my_skill}",
     "Group {skill} learning session",
     "{skill} crash course needed",
-    "Advanced {skill} techniques"
+    "Advanced {skill} techniques",
 ]
 
 REQUEST_DESCRIPTIONS = [
@@ -111,7 +260,7 @@ REQUEST_DESCRIPTIONS = [
     "Group study for {skill} - the more the merrier!",
     "Need quick help with {skill} basics before exam next week.",
     "Advanced learner seeking {skill} expert for challenging projects.",
-    "Casual {skill} learning - fun and relaxed atmosphere preferred."
+    "Casual {skill} learning - fun and relaxed atmosphere preferred.",
 ]
 
 BIO_TEMPLATES = [
@@ -122,7 +271,7 @@ BIO_TEMPLATES = [
     "Campus explorer | {interest1} fan | {interest2} newbie",
     "Balancing studies with passion for {interest1} and {interest2}.",
     "Future expert in {interest1} and {interest2}. Let's learn together!",
-    "Curious mind interested in {interest1} and {interest2}."
+    "Curious mind interested in {interest1} and {interest2}.",
 ]
 
 AVAILABILITY_OPTIONS = [
@@ -135,15 +284,60 @@ AVAILABILITY_OPTIONS = [
     "Tuesday/Thursday",
     "After 6pm weekdays",
     "Anytime on weekends",
-    "Limited availability - message me"
+    "Limited availability - message me",
 ]
 
-PREFERRED_MODES = ['online', 'offline', 'both']
-SKILL_LEVELS = ['beginner', 'intermediate', 'advanced']
-SKILL_TYPES = ['offer', 'want']
-MATCH_STATUSES = ['pending', 'accepted', 'rejected', 'completed']
-NOTIFICATION_VERBS = ['invite_sent', 'invite_accepted', 'invite_rejected', 'match_completed']
-REPORT_REASONS = ['spam', 'harassment', 'scam', 'inappropriate', 'other']
+PREFERRED_MODES = ["online", "offline", "both"]
+SKILL_LEVELS = ["beginner", "intermediate", "advanced"]
+SKILL_TYPES = ["offer", "want"]
+MATCH_STATUSES = ["pending", "accepted", "rejected", "completed"]
+NOTIFICATION_VERBS = ["invite_sent", "invite_accepted", "invite_rejected", "match_completed"]
+REPORT_REASONS = ["spam", "harassment", "scam", "inappropriate", "other"]
+
+
+def maybe_create_superuser(users):
+    """
+    可选创建超级用户（默认关闭）。
+
+    触发条件：
+    - SEED_CREATE_ADMIN=1
+    - 必须提供 SEED_ADMIN_PASSWORD
+    可选：
+    - SEED_ADMIN_USERNAME（默认 admin）
+    - SEED_ADMIN_EMAIL（默认 admin@skillswap.edu）
+    """
+    if os.environ.get("SEED_CREATE_ADMIN", "").strip() != "1":
+        print("  ℹ️  Superuser creation disabled (set SEED_CREATE_ADMIN=1 to enable).")
+        return
+
+    admin_username = os.environ.get("SEED_ADMIN_USERNAME", "admin").strip() or "admin"
+    admin_email = os.environ.get("SEED_ADMIN_EMAIL", "admin@skillswap.edu").strip() or "admin@skillswap.edu"
+    admin_password = os.environ.get("SEED_ADMIN_PASSWORD")
+
+    if not admin_password:
+        raise RuntimeError(
+            "SEED_ADMIN_PASSWORD is required when SEED_CREATE_ADMIN=1. "
+            "Either set it, or create an admin via `python manage.py createsuperuser`."
+        )
+
+    try:
+        if User.objects.filter(username=admin_username).exists():
+            admin = User.objects.get(username=admin_username)
+            users.append(admin)
+            print(f"  ℹ️  Superuser '{admin_username}' already exists, skipping creation.")
+            return
+
+        admin = User.objects.create_superuser(
+            username=admin_username,
+            email=admin_email,
+            password=admin_password,
+        )
+        users.append(admin)
+        print(f"  ✅ Created superuser: {admin_username} (password not printed)")
+    except IntegrityError:
+        admin = User.objects.get(username=admin_username)
+        users.append(admin)
+        print(f"  ℹ️  Superuser '{admin_username}' already exists (IntegrityError), using existing.")
 
 
 def create_users():
@@ -151,19 +345,8 @@ def create_users():
     print("Creating users...")
     users = []
 
-    # 创建超级用户
-    try:
-        admin = User.objects.create_superuser(
-            username='admin',
-            email='admin@skillswap.edu',
-            password='admin123'
-        )
-        print(f"  Created admin: admin/admin123")
-        users.append(admin)
-    except IntegrityError:
-        admin = User.objects.get(username='admin')
-        users.append(admin)
-        print(f"  Admin already exists")
+    # 方案 A：默认不创建超级用户（避免固定密码）
+    maybe_create_superuser(users)
 
     # 创建普通用户
     for i in range(NUM_USERS):
@@ -175,20 +358,20 @@ def create_users():
             user = User.objects.create_user(
                 username=username,
                 email=f"{username}@student.edu",
-                password='testpass123',
+                password=DEFAULT_USER_PASSWORD,
                 first_name=first_name,
-                last_name=last_name
+                last_name=last_name,
             )
 
             # 更新 Profile
             profile = user.profile
             profile.bio = random.choice(BIO_TEMPLATES).format(
                 interest1=random.choice(list(SKILL_CATEGORIES.keys())),
-                interest2=random.choice(list(SKILL_CATEGORIES.keys()))
+                interest2=random.choice(list(SKILL_CATEGORIES.keys())),
             )
             profile.availability = random.choice(AVAILABILITY_OPTIONS)
             profile.preferred_mode = random.choice(PREFERRED_MODES)
-            profile.location = random.choice(['Campus Center', 'Library', 'Online', 'Student Union', 'Coffee Shop'])
+            profile.location = random.choice(["Campus Center", "Library", "Online", "Student Union", "Coffee Shop"])
             profile.save()
 
             users.append(user)
@@ -199,7 +382,7 @@ def create_users():
         except IntegrityError:
             continue
 
-    print(f"Total users: {len(users)}")
+    print(f"Total users created/loaded: {len(users)}")
     return users
 
 
@@ -213,7 +396,7 @@ def create_skills():
             skill, created = Skill.objects.get_or_create(
                 name=name,
                 category=category,
-                defaults={'description': f'Learn {name} with fellow students'}
+                defaults={"description": f"Learn {name} with fellow students"},
             )
             skills.append(skill)
             if created:
@@ -243,14 +426,14 @@ def create_user_skills(users, skills):
                     skill=skill,
                     type=skill_type,
                     level=level,
-                    learning_months=random.randint(1, 36) if level != 'beginner' else random.randint(0, 6),
-                    self_rating=random.randint(1, 5) if level != 'beginner' else random.randint(1, 3)
+                    learning_months=random.randint(1, 36) if level != "beginner" else random.randint(0, 6),
+                    self_rating=random.randint(1, 5) if level != "beginner" else random.randint(1, 3),
                 )
                 count += 1
             except IntegrityError:
                 continue
 
-        if count % 50 == 0:
+        if count % 50 == 0 and count > 0:
             print(f"  Assigned {count} user skills...")
 
     print(f"Total user skills: {count}")
@@ -267,8 +450,8 @@ def create_requests(users, skills):
 
         title_template = random.choice(REQUEST_TITLES)
         # 获取用户的 offer 技能用于交换
-        user_offers = UserSkill.objects.filter(user=user, type='offer')
-        my_skill = user_offers.first().skill.name if user_offers.exists() else 'something interesting'
+        user_offers = UserSkill.objects.filter(user=user, type="offer")
+        my_skill = user_offers.first().skill.name if user_offers.exists() else "something interesting"
 
         title = title_template.format(skill=skill.name, my_skill=my_skill)
         description = random.choice(REQUEST_DESCRIPTIONS).format(skill=skill.name)
@@ -278,8 +461,8 @@ def create_requests(users, skills):
             skill=skill,
             title=title,
             description=description,
-            status='open',
-            preferred_time=random.choice(AVAILABILITY_OPTIONS)
+            status="open",
+            preferred_time=random.choice(AVAILABILITY_OPTIONS),
         )
         requests_list.append(req)
 
@@ -295,7 +478,7 @@ def create_matches(users, requests_list):
     print("\nCreating matches...")
     matches = []
 
-    open_requests = [r for r in requests_list if r.status == 'open']
+    open_requests = [r for r in requests_list if r.status == "open"]
 
     for i in range(min(NUM_MATCHES, len(open_requests))):
         req = random.choice(open_requests)
@@ -307,31 +490,31 @@ def create_matches(users, requests_list):
         partner = random.choice(potential_partners)
 
         # 随机状态，但 pending 和 accepted 居多
-        status_weights = ['pending'] * 4 + ['accepted'] * 3 + ['rejected'] * 2 + ['completed'] * 1
+        status_weights = ["pending"] * 4 + ["accepted"] * 3 + ["rejected"] * 2 + ["completed"] * 1
         status = random.choice(status_weights)
 
         try:
             match = Match.objects.create(
                 request=req,
-                requester=partner,  # 申请者是 partner
-                partner=req.user,  # 请求创建者是 partner
-                status=status
+                requester=partner,  # 发起者
+                partner=req.user,  # request 创建者
+                status=status,
             )
             matches.append(match)
 
             # 如果匹配完成，关闭请求
-            if status == 'completed':
-                req.status = 'closed'
+            if status == "completed":
+                req.status = "closed"
                 req.save()
 
             # 创建通知
-            if status == 'pending':
+            if status == "pending":
                 Notification.objects.create(
                     user=req.user,
                     actor=partner,
                     match=match,
-                    verb='invite_sent',
-                    message=f'{partner.username} sent you a match invite for "{req.title}"'
+                    verb="invite_sent",
+                    message=f'{partner.username} sent you a match invite for "{req.title}"',
                 )
 
             if (i + 1) % 15 == 0:
@@ -348,7 +531,7 @@ def create_conversations_and_messages(matches):
     """创建对话和消息"""
     print("\nCreating conversations and messages...")
 
-    accepted_matches = [m for m in matches if m.status in ['accepted', 'completed']]
+    accepted_matches = [m for m in matches if m.status in ["accepted", "completed"]]
 
     for i, match in enumerate(accepted_matches[:NUM_CONVERSATIONS]):
         # 创建对话
@@ -361,26 +544,28 @@ def create_conversations_and_messages(matches):
         num_messages = random.randint(3, 8)
         participants = [match.requester, match.partner]
 
-        for j in range(num_messages):
+        for _ in range(num_messages):
             sender = random.choice(participants)
-            body = random.choice([
-                "Hey! I'm interested in learning together.",
-                "When are you usually free?",
-                "I can meet on campus or online, whatever works for you!",
-                "That sounds great! I'm available next week.",
-                "Should we meet at the library?",
-                "Thanks for accepting my invite!",
-                "Looking forward to our session.",
-                "I have some materials I can share with you.",
-                "Perfect! See you then.",
-                "Let me know if you need to reschedule."
-            ])
+            body = random.choice(
+                [
+                    "Hey! I'm interested in learning together.",
+                    "When are you usually free?",
+                    "I can meet on campus or online, whatever works for you!",
+                    "That sounds great! I'm available next week.",
+                    "Should we meet at the library?",
+                    "Thanks for accepting my invite!",
+                    "Looking forward to our session.",
+                    "I have some materials I can share with you.",
+                    "Perfect! See you then.",
+                    "Let me know if you need to reschedule.",
+                ]
+            )
 
             Message.objects.create(
                 conversation=conversation,
                 sender=sender,
                 body=body,
-                is_read=random.choice([True, True, True, False])  # 大部分已读
+                is_read=random.choice([True, True, True, False]),  # 大部分已读
             )
 
         if (i + 1) % 10 == 0:
@@ -413,7 +598,7 @@ def create_feedback(matches):
     print("\nCreating feedback...")
     count = 0
 
-    completed_matches = [m for m in matches if m.status == 'completed']
+    completed_matches = [m for m in matches if m.status == "completed"]
 
     for match in completed_matches[:30]:  # 为 30 个完成的匹配创建评价
         participants = [match.requester, match.partner]
@@ -421,16 +606,18 @@ def create_feedback(matches):
         for rater in participants:
             ratee = match.partner if rater == match.requester else match.requester
 
-            comments = random.choice([
-                "Great learning experience!",
-                "Very helpful and patient.",
-                "Knowledgeable and friendly.",
-                "Good communication skills.",
-                "Highly recommended!",
-                "Learned a lot from this session.",
-                "Professional and punctual.",
-                "Would love to learn together again."
-            ])
+            comments = random.choice(
+                [
+                    "Great learning experience!",
+                    "Very helpful and patient.",
+                    "Knowledgeable and friendly.",
+                    "Good communication skills.",
+                    "Highly recommended!",
+                    "Learned a lot from this session.",
+                    "Professional and punctual.",
+                    "Would love to learn together again.",
+                ]
+            )
 
             try:
                 Feedback.objects.create(
@@ -438,7 +625,7 @@ def create_feedback(matches):
                     rater=rater,
                     ratee=ratee,
                     rating=random.randint(3, 5),
-                    comment=comments
+                    comment=comments,
                 )
                 count += 1
             except IntegrityError:
@@ -468,7 +655,7 @@ def create_reports(users, requests_list):
     """创建举报（少量）"""
     print("\nCreating reports...")
 
-    for i in range(5):  # 只创建 5 个举报
+    for _ in range(5):  # 只创建 5 个举报
         reporter = random.choice(users)
         reported_user = random.choice([u for u in users if u != reporter])
         req = random.choice(requests_list)
@@ -478,10 +665,10 @@ def create_reports(users, requests_list):
             reported_user=reported_user,
             content_object=req,
             reason=random.choice(REPORT_REASONS),
-            details="This is a test report for moderation testing."
+            details="This is a test report for moderation testing.",
         )
 
-    print(f"Total reports: 5")
+    print("Total reports: 5")
 
 
 def print_summary():
@@ -490,8 +677,6 @@ def print_summary():
     print("DATA SEEDING COMPLETE!")
     print("=" * 50)
     print(f"Users: {User.objects.count()}")
-    print(f"  - Including admin: admin/admin123")
-    print(f"  - Regular users password: testpass123")
     print(f"Skills: {Skill.objects.count()}")
     print(f"User Skills: {UserSkill.objects.count()}")
     print(f"Requests: {Request.objects.count()}")
@@ -503,9 +688,15 @@ def print_summary():
     print(f"Notifications: {Notification.objects.count()}")
     print(f"Reports: {Report.objects.count()}")
     print("=" * 50)
-    print("\nYou can now log in with:")
-    print("  Admin: admin / admin123")
-    print("  Any user: <username> / testpass123")
+
+    # 不打印管理员固定口令（避免安全风险）
+    print("\nLogin notes:")
+    print(f"  - Regular users password: {DEFAULT_USER_PASSWORD} (set via SEED_USER_PASSWORD)")
+    print("  - Superuser is NOT created by default.")
+    print("    Create one safely via:")
+    print("      python manage.py createsuperuser")
+    print("    Or (optional) enable scripted creation via env vars:")
+    print("      SEED_CREATE_ADMIN=1 SEED_ADMIN_PASSWORD='your-strong-password' python seed_data.py")
 
 
 def main():
@@ -514,7 +705,6 @@ def main():
     print("SkillSwap Data Seeding Script")
     print("=" * 50)
 
-    # 创建数据
     users = create_users()
     skills = create_skills()
     create_user_skills(users, skills)
@@ -526,9 +716,8 @@ def main():
     create_bookmarks(users, requests_list)
     create_reports(users, requests_list)
 
-    # 打印摘要
     print_summary()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
