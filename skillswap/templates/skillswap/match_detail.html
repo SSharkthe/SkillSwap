@@ -32,7 +32,7 @@
                         <button class="btn btn-outline-danger" type="submit">Reject</button>
                     </form>
                 {% endif %}
-                {% if match.status == 'accepted' and (user == match.requester or user == match.partner) %}
+                {% if match.status == 'accepted' and user == match.requester or user == match.partner %}
                     <form method="post" action="{% url 'skillswap:match-action' match.pk 'complete' %}">
                         {% csrf_token %}
                         <button class="btn btn-success" type="submit">Mark Completed</button>
