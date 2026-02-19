@@ -107,7 +107,7 @@ body.claude-skin {
 
 
 .claude-skin .navbar .nav-link[aria-label="Notifications"]::before {
-    content: "🔔";
+    content: "";
 }
 
 

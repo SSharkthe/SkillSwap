@@ -1,0 +1,899 @@
+/* =============================================================
+   SkillSwap → Claude UI Theme Override
+   将此文件放入 skillswap/static/css/claude_theme.css
+   然后在 base.html 中 Bootstrap CSS 之后引入
+   =============================================================*/
+
+/* ----- 1. CSS 变量 / 设计令牌 ----- */
+:root {
+  /* Claude 背景色系 */
+  --claude-bg-primary:    #FAF9F7;   /* 主背景：温暖的奶油白 */
+  --claude-bg-secondary:  #F5F4F0;   /* 次级背景 / 侧边栏 */
+  --claude-bg-card:       #FFFFFF;   /* 卡片背景 */
+  --claude-bg-input:      #FFFFFF;   /* 输入框背景 */
+  --claude-bg-hover:      #F0EFEB;   /* 悬停态 */
+  --claude-bg-active:     #E8E6E1;   /* 激活态 */
+
+  /* Claude 文字色系 */
+  --claude-text-primary:   #1A1A1A;  /* 主文字 */
+  --claude-text-secondary: #6B6560;  /* 次级文字 */
+  --claude-text-tertiary:  #9B9590;  /* 占位符/提示 */
+  --claude-text-link:      #BF5B2E;  /* 链接色 - Claude 的橙棕 */
+
+  /* Claude 边框 */
+  --claude-border-light:   #E8E6E1;  /* 轻边框 */
+  --claude-border-medium:  #D5D3CE;  /* 中等边框 */
+  --claude-border-input:   #D5D3CE;  /* 输入框边框 */
+
+  /* Claude 强调色 */
+  --claude-accent:         #BF5B2E;  /* 主强调色 - 橙棕 */
+  --claude-accent-hover:   #A84F28;  /* 强调色悬停 */
+  --claude-accent-light:   #F5EDE8;  /* 强调色浅版 */
+
+  /* 圆角 */
+  --claude-radius-sm:      8px;
+  --claude-radius-md:      12px;
+  --claude-radius-lg:      16px;
+  --claude-radius-xl:      24px;
+
+  /* 阴影 - Claude 风格极简 */
+  --claude-shadow-sm:      0 1px 2px rgba(0, 0, 0, 0.04);
+  --claude-shadow-md:      0 2px 8px rgba(0, 0, 0, 0.06);
+  --claude-shadow-lg:      0 4px 16px rgba(0, 0, 0, 0.08);
+
+  /* 字体 */
+  --claude-font-sans:      'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --claude-font-mono:      'Söhne Mono', 'Fira Code', 'Consolas', monospace;
+
+  /* 过渡 */
+  --claude-transition:     all 0.2s ease;
+}
+
+
+/* ----- 2. 全局基础 ----- */
+html {
+  font-size: 16px;
+}
+
+body {
+  background-color: var(--claude-bg-primary) !important;
+  color: var(--claude-text-primary) !important;
+  font-family: var(--claude-font-sans) !important;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+/* ----- 3. 导航栏 (Navbar) ----- */
+.navbar,
+nav.navbar {
+  background-color: var(--claude-bg-primary) !important;
+  border-bottom: 1px solid var(--claude-border-light) !important;
+  box-shadow: none !important;
+  padding: 12px 24px !important;
+}
+
+.navbar-brand {
+  color: var(--claude-text-primary) !important;
+  font-weight: 600 !important;
+  font-size: 1.1rem !important;
+  letter-spacing: -0.01em;
+}
+
+.navbar-brand:hover {
+  color: var(--claude-text-primary) !important;
+  opacity: 0.8;
+}
+
+.navbar-nav .nav-link {
+  color: var(--claude-text-secondary) !important;
+  font-size: 0.9rem !important;
+  font-weight: 450 !important;
+  padding: 8px 14px !important;
+  border-radius: var(--claude-radius-sm) !important;
+  transition: var(--claude-transition) !important;
+}
+
+.navbar-nav .nav-link:hover {
+  color: var(--claude-text-primary) !important;
+  background-color: var(--claude-bg-hover) !important;
+}
+
+.navbar-nav .nav-link.active {
+  color: var(--claude-text-primary) !important;
+  background-color: var(--claude-bg-active) !important;
+  font-weight: 500 !important;
+}
+
+/* 导航栏下拉菜单 */
+.navbar .dropdown-menu {
+  background-color: var(--claude-bg-card) !important;
+  border: 1px solid var(--claude-border-light) !important;
+  border-radius: var(--claude-radius-md) !important;
+  box-shadow: var(--claude-shadow-lg) !important;
+  padding: 6px !important;
+}
+
+.navbar .dropdown-item {
+  border-radius: var(--claude-radius-sm) !important;
+  color: var(--claude-text-primary) !important;
+  font-size: 0.9rem !important;
+  padding: 8px 12px !important;
+}
+
+.navbar .dropdown-item:hover {
+  background-color: var(--claude-bg-hover) !important;
+}
+
+/* 导航栏 toggler (移动端) */
+.navbar-toggler {
+  border: 1px solid var(--claude-border-light) !important;
+  border-radius: var(--claude-radius-sm) !important;
+  padding: 6px 10px !important;
+}
+
+.navbar-toggler:focus {
+  box-shadow: none !important;
+}
+
+
+/* ----- 4. 卡片 (Cards) ----- */
+.card {
+  background-color: var(--claude-bg-card) !important;
+  border: 1px solid var(--claude-border-light) !important;
+  border-radius: var(--claude-radius-lg) !important;
+  box-shadow: none !important;
+  transition: var(--claude-transition) !important;
+  overflow: hidden;
+}
+
+.card:hover {
+  border-color: var(--claude-border-medium) !important;
+  box-shadow: var(--claude-shadow-sm) !important;
+}
+
+.card-header {
+  background-color: transparent !important;
+  border-bottom: 1px solid var(--claude-border-light) !important;
+  padding: 16px 20px !important;
+  font-weight: 500 !important;
+}
+
+.card-body {
+  padding: 20px !important;
+}
+
+.card-footer {
+  background-color: transparent !important;
+  border-top: 1px solid var(--claude-border-light) !important;
+  padding: 16px 20px !important;
+}
+
+.card-title {
+  color: var(--claude-text-primary) !important;
+  font-weight: 600 !important;
+  font-size: 1.05rem !important;
+  margin-bottom: 8px !important;
+}
+
+.card-text {
+  color: var(--claude-text-secondary) !important;
+  font-size: 0.9rem !important;
+  line-height: 1.5 !important;
+}
+
+
+/* ----- 5. 按钮 (Buttons) ----- */
+
+/* 主要按钮 (实心) */
+.btn-primary,
+.btn-warning,
+.btn-success {
+  background-color: var(--claude-accent) !important;
+  border: 1px solid var(--claude-accent) !important;
+  color: #FFFFFF !important;
+  border-radius: var(--claude-radius-xl) !important;
+  padding: 8px 20px !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  transition: var(--claude-transition) !important;
+  box-shadow: none !important;
+}
+
+.btn-primary:hover,
+.btn-warning:hover,
+.btn-success:hover {
+  background-color: var(--claude-accent-hover) !important;
+  border-color: var(--claude-accent-hover) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.btn-primary:focus,
+.btn-warning:focus,
+.btn-success:focus {
+  box-shadow: 0 0 0 3px var(--claude-accent-light) !important;
+}
+
+/* 次要按钮 (轮廓/描边) */
+.btn-outline-primary,
+.btn-outline-warning,
+.btn-outline-secondary,
+.btn-secondary,
+.btn-light {
+  background-color: transparent !important;
+  border: 1px solid var(--claude-border-medium) !important;
+  color: var(--claude-text-primary) !important;
+  border-radius: var(--claude-radius-xl) !important;
+  padding: 8px 20px !important;
+  font-size: 0.9rem !important;
+  font-weight: 450 !important;
+  transition: var(--claude-transition) !important;
+  box-shadow: none !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-warning:hover,
+.btn-outline-secondary:hover,
+.btn-secondary:hover,
+.btn-light:hover {
+  background-color: var(--claude-bg-hover) !important;
+  border-color: var(--claude-border-medium) !important;
+  color: var(--claude-text-primary) !important;
+  box-shadow: none !important;
+}
+
+/* 危险按钮 */
+.btn-danger,
+.btn-outline-danger {
+  background-color: transparent !important;
+  border: 1px solid #D4443B !important;
+  color: #D4443B !important;
+  border-radius: var(--claude-radius-xl) !important;
+  padding: 8px 20px !important;
+  font-size: 0.9rem !important;
+  font-weight: 450 !important;
+  transition: var(--claude-transition) !important;
+  box-shadow: none !important;
+}
+
+.btn-danger:hover,
+.btn-outline-danger:hover {
+  background-color: #FDF2F2 !important;
+  border-color: #D4443B !important;
+  color: #D4443B !important;
+}
+
+/* 链接风格按钮 */
+.btn-link {
+  color: var(--claude-accent) !important;
+  text-decoration: none !important;
+  font-weight: 450 !important;
+  padding: 8px 12px !important;
+}
+
+.btn-link:hover {
+  color: var(--claude-accent-hover) !important;
+  background-color: var(--claude-accent-light) !important;
+  border-radius: var(--claude-radius-sm) !important;
+}
+
+/* 小按钮 */
+.btn-sm {
+  padding: 5px 14px !important;
+  font-size: 0.825rem !important;
+  border-radius: var(--claude-radius-lg) !important;
+}
+
+/* 大按钮 */
+.btn-lg {
+  padding: 12px 28px !important;
+  font-size: 1rem !important;
+  border-radius: var(--claude-radius-xl) !important;
+}
+
+
+/* ----- 6. 表单 (Forms) ----- */
+.form-control,
+.form-select {
+  background-color: var(--claude-bg-input) !important;
+  border: 1px solid var(--claude-border-input) !important;
+  border-radius: var(--claude-radius-md) !important;
+  color: var(--claude-text-primary) !important;
+  font-size: 0.9rem !important;
+  padding: 10px 14px !important;
+  transition: var(--claude-transition) !important;
+  box-shadow: none !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--claude-accent) !important;
+  box-shadow: 0 0 0 3px var(--claude-accent-light) !important;
+  outline: none !important;
+}
+
+.form-control::placeholder {
+  color: var(--claude-text-tertiary) !important;
+}
+
+.form-label {
+  color: var(--claude-text-primary) !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  margin-bottom: 6px !important;
+}
+
+.form-text {
+  color: var(--claude-text-tertiary) !important;
+  font-size: 0.8rem !important;
+}
+
+/* 搜索框特殊样式 */
+input[type="search"],
+.search-input {
+  border-radius: var(--claude-radius-xl) !important;
+  padding-left: 16px !important;
+}
+
+/* 复选框和单选框 */
+.form-check-input {
+  border: 1.5px solid var(--claude-border-medium) !important;
+  border-radius: 4px !important;
+}
+
+.form-check-input:checked {
+  background-color: var(--claude-accent) !important;
+  border-color: var(--claude-accent) !important;
+}
+
+.form-check-input:focus {
+  box-shadow: 0 0 0 3px var(--claude-accent-light) !important;
+}
+
+
+/* ----- 7. 徽章 (Badges) ----- */
+.badge {
+  font-weight: 500 !important;
+  font-size: 0.75rem !important;
+  padding: 4px 10px !important;
+  border-radius: var(--claude-radius-xl) !important;
+  letter-spacing: 0.02em;
+}
+
+.badge.bg-primary,
+.badge.bg-info {
+  background-color: var(--claude-accent-light) !important;
+  color: var(--claude-accent) !important;
+}
+
+.badge.bg-success {
+  background-color: #ECFDF5 !important;
+  color: #047857 !important;
+}
+
+.badge.bg-warning {
+  background-color: #FFF7ED !important;
+  color: #B45309 !important;
+}
+
+.badge.bg-danger {
+  background-color: #FEF2F2 !important;
+  color: #DC2626 !important;
+}
+
+.badge.bg-secondary {
+  background-color: var(--claude-bg-hover) !important;
+  color: var(--claude-text-secondary) !important;
+}
+
+.badge.bg-dark {
+  background-color: var(--claude-text-primary) !important;
+  color: #FFFFFF !important;
+}
+
+
+/* ----- 8. 警告/提示 (Alerts) ----- */
+.alert {
+  border-radius: var(--claude-radius-md) !important;
+  border: 1px solid var(--claude-border-light) !important;
+  font-size: 0.9rem !important;
+  padding: 14px 18px !important;
+}
+
+.alert-success {
+  background-color: #F0FDF4 !important;
+  border-color: #BBF7D0 !important;
+  color: #166534 !important;
+}
+
+.alert-danger {
+  background-color: #FEF2F2 !important;
+  border-color: #FECACA !important;
+  color: #991B1B !important;
+}
+
+.alert-warning {
+  background-color: #FFFBEB !important;
+  border-color: #FDE68A !important;
+  color: #92400E !important;
+}
+
+.alert-info {
+  background-color: var(--claude-accent-light) !important;
+  border-color: #F0D7C8 !important;
+  color: var(--claude-accent) !important;
+}
+
+
+/* ----- 9. 表格 (Tables) ----- */
+.table {
+  color: var(--claude-text-primary) !important;
+  font-size: 0.9rem !important;
+}
+
+.table thead th {
+  background-color: var(--claude-bg-secondary) !important;
+  border-bottom: 1px solid var(--claude-border-light) !important;
+  color: var(--claude-text-secondary) !important;
+  font-weight: 500 !important;
+  font-size: 0.825rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 12px 16px !important;
+}
+
+.table td {
+  border-bottom: 1px solid var(--claude-border-light) !important;
+  padding: 12px 16px !important;
+  vertical-align: middle !important;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: var(--claude-bg-secondary) !important;
+}
+
+.table-hover tbody tr:hover {
+  background-color: var(--claude-bg-hover) !important;
+}
+
+
+/* ----- 10. 模态框 (Modals) ----- */
+.modal-content {
+  background-color: var(--claude-bg-card) !important;
+  border: 1px solid var(--claude-border-light) !important;
+  border-radius: var(--claude-radius-lg) !important;
+  box-shadow: var(--claude-shadow-lg) !important;
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--claude-border-light) !important;
+  padding: 20px 24px !important;
+}
+
+.modal-title {
+  font-weight: 600 !important;
+  font-size: 1.1rem !important;
+}
+
+.modal-body {
+  padding: 24px !important;
+}
+
+.modal-footer {
+  border-top: 1px solid var(--claude-border-light) !important;
+  padding: 16px 24px !important;
+}
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+
+/* ----- 11. 分页 (Pagination) ----- */
+.pagination .page-link {
+  background-color: transparent !important;
+  border: 1px solid var(--claude-border-light) !important;
+  color: var(--claude-text-primary) !important;
+  border-radius: var(--claude-radius-sm) !important;
+  margin: 0 2px !important;
+  padding: 8px 14px !important;
+  font-size: 0.875rem !important;
+  transition: var(--claude-transition) !important;
+}
+
+.pagination .page-link:hover {
+  background-color: var(--claude-bg-hover) !important;
+  border-color: var(--claude-border-medium) !important;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: var(--claude-accent) !important;
+  border-color: var(--claude-accent) !important;
+  color: #FFFFFF !important;
+}
+
+
+/* ----- 12. 列表组 (List Groups) ----- */
+.list-group-item {
+  background-color: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid var(--claude-border-light) !important;
+  padding: 14px 16px !important;
+  color: var(--claude-text-primary) !important;
+  transition: var(--claude-transition) !important;
+}
+
+.list-group-item:last-child {
+  border-bottom: none !important;
+}
+
+.list-group-item:hover {
+  background-color: var(--claude-bg-hover) !important;
+}
+
+.list-group-item.active {
+  background-color: var(--claude-accent-light) !important;
+  color: var(--claude-accent) !important;
+  border-color: var(--claude-border-light) !important;
+}
+
+
+/* ----- 13. 面包屑 (Breadcrumb) ----- */
+.breadcrumb {
+  background-color: transparent !important;
+  padding: 8px 0 !important;
+  font-size: 0.85rem !important;
+}
+
+.breadcrumb-item a {
+  color: var(--claude-text-secondary) !important;
+  text-decoration: none !important;
+}
+
+.breadcrumb-item a:hover {
+  color: var(--claude-accent) !important;
+}
+
+.breadcrumb-item.active {
+  color: var(--claude-text-tertiary) !important;
+}
+
+
+/* ----- 14. 排版 (Typography) ----- */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--claude-text-primary) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+h1 { font-size: 2rem !important; }
+h2 { font-size: 1.5rem !important; }
+h3 { font-size: 1.25rem !important; }
+h4 { font-size: 1.1rem !important; }
+h5 { font-size: 1rem !important; }
+h6 { font-size: 0.9rem !important; }
+
+p {
+  color: var(--claude-text-secondary);
+  line-height: 1.6;
+}
+
+a {
+  color: var(--claude-accent);
+  text-decoration: none;
+  transition: var(--claude-transition);
+}
+
+a:hover {
+  color: var(--claude-accent-hover);
+}
+
+small, .small {
+  color: var(--claude-text-tertiary) !important;
+}
+
+
+/* ----- 15. 头像/用户图标 ----- */
+.rounded-circle,
+img.avatar,
+.avatar {
+  border: 2px solid var(--claude-border-light) !important;
+}
+
+
+/* ----- 16. 通知计数圆点 ----- */
+.badge-notification,
+.notification-dot {
+  background-color: var(--claude-accent) !important;
+  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+}
+
+
+/* ----- 17. 页脚 (Footer) ----- */
+footer,
+.footer {
+  background-color: var(--claude-bg-primary) !important;
+  border-top: 1px solid var(--claude-border-light) !important;
+  color: var(--claude-text-tertiary) !important;
+  font-size: 0.85rem !important;
+}
+
+
+/* ----- 18. 滚动条样式 ----- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--claude-border-medium);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--claude-text-tertiary);
+}
+
+
+/* ----- 19. 工具提示 (Tooltips) ----- */
+.tooltip-inner {
+  background-color: var(--claude-text-primary) !important;
+  border-radius: var(--claude-radius-sm) !important;
+  font-size: 0.8rem !important;
+  padding: 6px 12px !important;
+}
+
+
+/* ----- 20. 进度条 (Progress) ----- */
+.progress {
+  background-color: var(--claude-bg-secondary) !important;
+  border-radius: var(--claude-radius-xl) !important;
+  height: 6px !important;
+  overflow: hidden;
+}
+
+.progress-bar {
+  background-color: var(--claude-accent) !important;
+  border-radius: var(--claude-radius-xl) !important;
+}
+
+
+/* ----- 21. Accordion ----- */
+.accordion-item {
+  background-color: var(--claude-bg-card) !important;
+  border: 1px solid var(--claude-border-light) !important;
+  border-radius: var(--claude-radius-md) !important;
+  margin-bottom: 8px !important;
+}
+
+.accordion-button {
+  background-color: transparent !important;
+  color: var(--claude-text-primary) !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
+
+.accordion-button:not(.collapsed) {
+  background-color: var(--claude-bg-secondary) !important;
+  color: var(--claude-text-primary) !important;
+}
+
+.accordion-button:focus {
+  box-shadow: 0 0 0 3px var(--claude-accent-light) !important;
+}
+
+
+/* ----- 22. 消息/聊天 (Inbox) ----- */
+.message-bubble,
+.chat-message {
+  border-radius: var(--claude-radius-lg) !important;
+  padding: 12px 16px !important;
+  font-size: 0.9rem !important;
+  line-height: 1.5 !important;
+}
+
+/* 自己发送的消息 */
+.message-sent,
+.message-outgoing {
+  background-color: var(--claude-accent-light) !important;
+  color: var(--claude-text-primary) !important;
+}
+
+/* 收到的消息 */
+.message-received,
+.message-incoming {
+  background-color: var(--claude-bg-secondary) !important;
+  color: var(--claude-text-primary) !important;
+}
+
+
+/* ----- 23. 容器间距微调 ----- */
+.container,
+.container-fluid {
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+}
+
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1140px !important;
+  }
+}
+
+
+/* ----- 24. 选择/下拉 ----- */
+.dropdown-menu {
+  background-color: var(--claude-bg-card) !important;
+  border: 1px solid var(--claude-border-light) !important;
+  border-radius: var(--claude-radius-md) !important;
+  box-shadow: var(--claude-shadow-lg) !important;
+  padding: 6px !important;
+}
+
+.dropdown-item {
+  border-radius: var(--claude-radius-sm) !important;
+  color: var(--claude-text-primary) !important;
+  font-size: 0.9rem !important;
+  padding: 8px 14px !important;
+  transition: var(--claude-transition) !important;
+}
+
+.dropdown-item:hover {
+  background-color: var(--claude-bg-hover) !important;
+}
+
+.dropdown-divider {
+  border-color: var(--claude-border-light) !important;
+}
+
+
+/* ----- 25. 选项卡 (Tabs / Pills) ----- */
+.nav-tabs {
+  border-bottom: 1px solid var(--claude-border-light) !important;
+}
+
+.nav-tabs .nav-link {
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  color: var(--claude-text-secondary) !important;
+  font-size: 0.9rem !important;
+  font-weight: 450 !important;
+  padding: 10px 16px !important;
+  border-radius: 0 !important;
+  transition: var(--claude-transition) !important;
+}
+
+.nav-tabs .nav-link:hover {
+  color: var(--claude-text-primary) !important;
+  border-bottom-color: var(--claude-border-medium) !important;
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--claude-accent) !important;
+  border-bottom-color: var(--claude-accent) !important;
+  background-color: transparent !important;
+}
+
+.nav-pills .nav-link {
+  border-radius: var(--claude-radius-xl) !important;
+  color: var(--claude-text-secondary) !important;
+  font-size: 0.9rem !important;
+  padding: 8px 16px !important;
+  transition: var(--claude-transition) !important;
+}
+
+.nav-pills .nav-link.active {
+  background-color: var(--claude-accent) !important;
+  color: #FFFFFF !important;
+}
+
+
+/* ----- 26. 关闭按钮 ----- */
+.btn-close {
+  opacity: 0.5 !important;
+  transition: var(--claude-transition) !important;
+}
+
+.btn-close:hover {
+  opacity: 1 !important;
+}
+
+
+/* ----- 27. Toast 通知 ----- */
+.toast {
+  background-color: var(--claude-bg-card) !important;
+  border: 1px solid var(--claude-border-light) !important;
+  border-radius: var(--claude-radius-md) !important;
+  box-shadow: var(--claude-shadow-lg) !important;
+}
+
+
+/* ----- 28. Bootstrap 工具类覆盖 ----- */
+.bg-primary   { background-color: var(--claude-accent) !important; }
+.bg-secondary { background-color: var(--claude-bg-secondary) !important; }
+.bg-light     { background-color: var(--claude-bg-primary) !important; }
+.bg-white     { background-color: var(--claude-bg-card) !important; }
+.bg-dark      { background-color: var(--claude-text-primary) !important; }
+
+.text-primary   { color: var(--claude-accent) !important; }
+.text-secondary { color: var(--claude-text-secondary) !important; }
+.text-muted     { color: var(--claude-text-tertiary) !important; }
+.text-dark      { color: var(--claude-text-primary) !important; }
+
+.border         { border-color: var(--claude-border-light) !important; }
+.border-primary { border-color: var(--claude-accent) !important; }
+
+.shadow-sm { box-shadow: var(--claude-shadow-sm) !important; }
+.shadow    { box-shadow: var(--claude-shadow-md) !important; }
+.shadow-lg { box-shadow: var(--claude-shadow-lg) !important; }
+
+
+/* ----- 29. 特殊：Community Snapshot 卡片 ----- */
+/* 统计数据展示 */
+.stat-number,
+.display-4,
+.display-5 {
+  font-weight: 600 !important;
+  color: var(--claude-text-primary) !important;
+  letter-spacing: -0.03em;
+}
+
+.stat-label {
+  color: var(--claude-text-tertiary) !important;
+  font-size: 0.825rem !important;
+  font-weight: 450 !important;
+  text-transform: none !important;
+}
+
+
+/* ----- 30. 动画 / 过渡 ----- */
+.card,
+.btn,
+.form-control,
+.form-select,
+.nav-link,
+.list-group-item,
+.dropdown-item,
+.page-link {
+  transition: var(--claude-transition) !important;
+}
+
+/* 渐入动画 */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* 加入 claude_theme.css 末尾 */
+[data-lucide] {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.75;
+  vertical-align: middle;
+}
+
+/* 导航栏图标稍小 */
+.navbar [data-lucide] {
+  width: 16px;
+  height: 16px;
+}
+
+/* 卡片标题图标 */
+.card-header [data-lucide],
+.card-title [data-lucide] {
+  width: 20px;
+  height: 20px;
+}
