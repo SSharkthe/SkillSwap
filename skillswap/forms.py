@@ -8,6 +8,7 @@ User = get_user_model()
 
 
 class BootstrapFormMixin:
+    # Add Bootstrap classes to common form widgets
     def _apply_bootstrap(self):
         for field in self.fields.values():
             if isinstance(field.widget,
@@ -25,6 +26,7 @@ class BootstrapFormMixin:
 
 
 class RegistrationForm(BootstrapFormMixin, UserCreationForm):
+    # Require email during registration
     email = forms.EmailField(required=True)
 
     class Meta(UserCreationForm.Meta):
@@ -37,6 +39,7 @@ class RegistrationForm(BootstrapFormMixin, UserCreationForm):
 
 
 class BootstrapAuthenticationForm(BootstrapFormMixin, AuthenticationForm):
+    # Login form with Bootstrap styling
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._apply_bootstrap()
@@ -47,6 +50,7 @@ class ProfileForm(BootstrapFormMixin, forms.ModelForm):
         model = Profile
         fields = ('avatar', 'bio', 'availability', 'preferred_mode', 'location')
         widgets = {
+            # Make bio easier to type with a bigger text area
             'bio': forms.Textarea(attrs={'rows': 4}),
         }
 
@@ -69,6 +73,7 @@ class SkillForm(BootstrapFormMixin, forms.ModelForm):
 
 
 class UserSkillForm(BootstrapFormMixin, forms.ModelForm):
+    # Extra fields so user can add a new skill if it does not already exist
     skill_name = forms.CharField(required=False, label='New skill name')
     skill_category = forms.CharField(required=False, label='New skill category')
     skill_description = forms.CharField(
@@ -88,6 +93,7 @@ class UserSkillForm(BootstrapFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._apply_bootstrap()
+        # Existing skill is optional because user may create a new one
         self.fields['skill'].required = False
 
     def clean(self):
@@ -96,6 +102,7 @@ class UserSkillForm(BootstrapFormMixin, forms.ModelForm):
         skill_name = cleaned_data.get('skill_name')
         skill_category = cleaned_data.get('skill_category')
 
+        # User must either choose a skill or enter a new one
         if not skill and not (skill_name and skill_category):
             raise forms.ValidationError('Select an existing skill or add a new one.')
         return cleaned_data
@@ -106,6 +113,7 @@ class UserSkillForm(BootstrapFormMixin, forms.ModelForm):
         skill_category = self.cleaned_data.get('skill_category')
         skill_description = self.cleaned_data.get('skill_description')
 
+        # Create the skill if user entered a new one
         if skill_name and skill_category:
             skill, _ = Skill.objects.get_or_create(
                 name=skill_name.strip(),
@@ -143,6 +151,7 @@ class MatchInviteForm(BootstrapFormMixin, forms.ModelForm):
 
 
 class FeedbackForm(BootstrapFormMixin, forms.ModelForm):
+    # Use dropdown choices for rating from 1 to 5
     rating = forms.TypedChoiceField(
         choices=[(value, value) for value in range(1, 6)],
         coerce=int,
@@ -166,6 +175,7 @@ class MessageForm(BootstrapFormMixin, forms.ModelForm):
         model = Message
         fields = ('body',)
         widgets = {
+            # Message input box in chat
             'body': forms.Textarea(attrs={'rows': 3, 'maxlength': 2000}),
         }
 

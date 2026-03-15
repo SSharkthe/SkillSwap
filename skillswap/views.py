@@ -35,10 +35,12 @@ User = get_user_model()
 
 
 class HomeView(TemplateView):
+    # Home page of the app
     template_name = 'skillswap/home.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # Show some basic stats and recent requests on the homepage
         context['recent_requests'] = Request.objects.select_related('skill', 'user')[:3]
         context['skill_count'] = Skill.objects.count()
         context['member_count'] = User.objects.count()
@@ -46,6 +48,7 @@ class HomeView(TemplateView):
 
 
 def register_view(request):
+    # If user is already logged in, send them to dashboard
     if request.user.is_authenticated:
         return redirect('skillswap:dashboard')
 
@@ -64,11 +67,14 @@ def register_view(request):
 
 @method_decorator(login_required, name='dispatch')
 class DashboardView(TemplateView):
+    # Personal dashboard after login
     template_name = 'skillswap/dashboard.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
+
+        # Load profile, skills, requests, matches and recommendations
         context['profile'] = user.profile
         context['offers'] = user.user_skills.filter(type=UserSkill.SkillType.OFFER)
         context['wants'] = user.user_skills.filter(type=UserSkill.SkillType.WANT)
@@ -83,11 +89,14 @@ class ProfileDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'profile'
 
     def get_object(self, queryset=None):
+        # Find profile by username from URL
         user = get_object_or_404(User, username=self.kwargs['username'])
         return user.profile
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # Prepare rating summary and skill lists for this profile
         rating_summary = self.object.user.received_feedback.aggregate(
             average=Avg('rating'),
             count=Count('id'),
@@ -96,6 +105,8 @@ class ProfileDetailView(LoginRequiredMixin, DetailView):
         context['recent_feedback'] = self.object.user.received_feedback.exclude(comment='')[:3]
         context['offers'] = self.object.user.user_skills.filter(type=UserSkill.SkillType.OFFER).select_related('skill')
         context['wants'] = self.object.user.user_skills.filter(type=UserSkill.SkillType.WANT).select_related('skill')
+
+        # Check block relationship between current user and profile owner
         context['is_blocked'] = is_blocked(self.request.user, self.object.user)
         context['has_blocked'] = Block.objects.filter(
             blocker=self.request.user,
@@ -105,6 +116,7 @@ class ProfileDetailView(LoginRequiredMixin, DetailView):
 
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
+    # View for editing the current user's profile
     model = Profile
     form_class = ProfileForm
     template_name = 'skillswap/profile_form.html'
@@ -120,29 +132,38 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
 
 @login_required
 def block_toggle(request, username):
+    # Only allow block/unblock through POST
     if request.method != 'POST':
         return HttpResponseForbidden('Invalid method.')
+
     target = get_object_or_404(User, username=username)
+
+    # User cannot block themselves
     if target == request.user:
         return HttpResponseForbidden('Cannot block yourself.')
+
+    # Toggle block state
     block, created = Block.objects.get_or_create(blocker=request.user, blocked=target)
     if created:
         messages.success(request, 'User blocked.')
     else:
         block.delete()
         messages.success(request, 'User unblocked.')
+
     next_url = request.POST.get('next') or request.GET.get('next') or target.profile.get_absolute_url()
     return redirect(next_url)
 
 
 @login_required
 def blocked_list(request):
+    # Show users blocked by current user
     blocked_users = User.objects.filter(blocked_by__blocker=request.user).select_related('profile')
     return render(request, 'skillswap/blocked_list.html', {'blocked_users': blocked_users})
 
 
 @login_required
 def my_skills_view(request):
+    # Split current user's skills into offers and wants
     offers = request.user.user_skills.filter(type=UserSkill.SkillType.OFFER).select_related('skill')
     wants = request.user.user_skills.filter(type=UserSkill.SkillType.WANT).select_related('skill')
     return render(request, 'skillswap/my_skills.html', {'offers': offers, 'wants': wants})
@@ -150,6 +171,7 @@ def my_skills_view(request):
 
 @login_required
 def user_skill_create(request):
+    # Add a new user skill
     if request.method == 'POST':
         form = UserSkillForm(request.POST)
         if form.is_valid():
@@ -161,6 +183,7 @@ def user_skill_create(request):
                 messages.success(request, 'Skill saved.')
                 return redirect('skillswap:my-skills')
             except IntegrityError:
+                # Prevent duplicate skill + type combinations
                 form.add_error(None, 'You already added this skill with the same type.')
     else:
         form = UserSkillForm()
@@ -169,6 +192,7 @@ def user_skill_create(request):
 
 @login_required
 def user_skill_update(request, pk):
+    # Only owner can update their own skill record
     user_skill = get_object_or_404(UserSkill, pk=pk, user=request.user)
     if request.method == 'POST':
         form = UserSkillForm(request.POST, instance=user_skill)
@@ -185,6 +209,7 @@ def user_skill_update(request, pk):
 
 @login_required
 def user_skill_delete(request, pk):
+    # Only owner can delete their own skill record
     user_skill = get_object_or_404(UserSkill, pk=pk, user=request.user)
     if request.method == 'POST':
         user_skill.delete()
@@ -198,11 +223,13 @@ class MyRequestListView(LoginRequiredMixin, ListView):
     context_object_name = 'requests'
 
     def get_queryset(self):
+        # Show only requests created by current user
         return self.request.user.requests.select_related('skill')
 
 
 @login_required
 def request_create(request):
+    # Create a new learning request
     if request.method == 'POST':
         form = RequestForm(request.POST)
         if form.is_valid():
@@ -218,6 +245,7 @@ def request_create(request):
 
 @login_required
 def request_update(request, pk):
+    # Only request owner can edit the request
     req = get_object_or_404(Request, pk=pk, user=request.user)
     if request.method == 'POST':
         form = RequestForm(request.POST, instance=req)
@@ -238,6 +266,8 @@ class RequestDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         req = self.object
+
+        # Extra info for request detail page
         context['can_edit'] = req.user == self.request.user
         context['invite_form'] = MatchInviteForm()
         context['existing_match'] = Match.objects.filter(
@@ -253,6 +283,7 @@ class RequestDetailView(LoginRequiredMixin, DetailView):
 
 @login_required
 def request_close(request, pk):
+    # Only request owner can close it
     req = get_object_or_404(Request, pk=pk, user=request.user)
     if request.method == 'POST':
         req.status = Request.Status.CLOSED
@@ -268,12 +299,17 @@ class ExploreRequestListView(LoginRequiredMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
+        # Start with open requests
         queryset = Request.objects.select_related('skill', 'user').filter(status=Request.Status.OPEN)
+
+        # Exclude current user and blocked users
         if self.request.user.is_authenticated:
             queryset = queryset.exclude(user=self.request.user)
             blocked_ids = blocked_user_ids(self.request.user)
             if blocked_ids:
                 queryset = queryset.exclude(user__in=blocked_ids)
+
+        # Support keyword and category filters
         q = self.request.GET.get('q')
         category = self.request.GET.get('category')
         if q:
@@ -291,36 +327,45 @@ class ExploreRequestListView(LoginRequiredMixin, ListView):
 
 @login_required
 def bookmark_toggle(request, pk):
+    # Bookmark action only accepts POST
     if request.method != 'POST':
         return HttpResponseForbidden('Invalid method.')
+
     request_obj = get_object_or_404(Request, pk=pk)
     profile = request.user.profile
+
+    # Toggle bookmarked state
     if profile.bookmarked_requests.filter(pk=request_obj.pk).exists():
         profile.bookmarked_requests.remove(request_obj)
         messages.info(request, 'Removed from bookmarks.')
     else:
         profile.bookmarked_requests.add(request_obj)
         messages.success(request, 'Bookmarked.')
+
     next_url = request.POST.get('next') or request.GET.get('next') or request_obj.get_absolute_url()
     return redirect(next_url)
 
 
 @login_required
 def bookmark_list(request):
+    # Show current user's bookmarked requests
     bookmarks = request.user.profile.bookmarked_requests.select_related('skill', 'user').order_by('-created_at')
     return render(request, 'skillswap/bookmarks.html', {'bookmarks': bookmarks})
 
 
 @login_required
 def notification_list(request):
+    # Show notifications for current user
     notifications = request.user.notifications.select_related('actor', 'match', 'request')
     return render(request, 'skillswap/notifications.html', {'notifications': notifications})
 
 
 @login_required
 def notification_mark_read(request, pk):
+    # Mark a notification as read
     if request.method != 'POST':
         return HttpResponseForbidden('Invalid method.')
+
     notification = get_object_or_404(Notification, pk=pk, user=request.user)
     if not notification.is_read:
         notification.is_read = True
@@ -328,15 +373,22 @@ def notification_mark_read(request, pk):
         messages.success(request, 'Notification marked as read.')
     return redirect('skillswap:notifications')
 
+
 @login_required
 def inbox_list(request):
     user = request.user
+
+    # Find accepted/completed matches for this user
     matches = Match.objects.filter(
         Q(requester=user) | Q(partner=user),
         status__in=[Match.Status.ACCEPTED, Match.Status.COMPLETED],
     )
+
+    # Make sure each match has a conversation
     for match in matches:
         Conversation.objects.get_or_create(match=match)
+
+    # Load conversation list with last message time and unread count
     conversations = (
         Conversation.objects.filter(
             Q(match__requester=user) | Q(match__partner=user),
@@ -349,6 +401,8 @@ def inbox_list(request):
         )
         .order_by('-last_message_at', '-created_at')
     )
+
+    # Add some helpful attributes for display
     for conversation in conversations:
         conversation.last_message = conversation.messages.order_by('-created_at').first()
         conversation.counterpart = (
@@ -361,15 +415,22 @@ def inbox_list(request):
 
 @login_required
 def inbox_detail(request, match_id):
+    # Only participants in the match can open this conversation
     match = get_object_or_404(Match, pk=match_id)
     if request.user not in {match.requester, match.partner}:
         return HttpResponseForbidden('Not allowed.')
+
+    # Conversation is only available after match is accepted/completed
     if match.status not in {Match.Status.ACCEPTED, Match.Status.COMPLETED}:
         return HttpResponseForbidden('Conversation not available.')
+
     conversation, _ = Conversation.objects.get_or_create(match=match)
     counterpart = match.partner if request.user == match.requester else match.requester
     is_blocked_flag = is_blocked(request.user, counterpart)
+
+    # Mark received unread messages as read
     Message.objects.filter(conversation=conversation, sender=counterpart, is_read=False).update(is_read=True)
+
     message_form = MessageForm()
     conversation_messages = conversation.messages.select_related('sender')
     return render(
@@ -388,16 +449,21 @@ def inbox_detail(request, match_id):
 
 @login_required
 def inbox_send(request, match_id):
+    # Send a message in a conversation
     match = get_object_or_404(Match, pk=match_id)
     if request.user not in {match.requester, match.partner}:
         return HttpResponseForbidden('Not allowed.')
+
     if match.status not in {Match.Status.ACCEPTED, Match.Status.COMPLETED}:
         return HttpResponseForbidden('Conversation not available.')
+
     counterpart = match.partner if request.user == match.requester else match.requester
     if is_blocked(request.user, counterpart):
         return HttpResponseForbidden('Messaging is blocked.')
+
     if request.method != 'POST':
         return HttpResponseForbidden('Invalid method.')
+
     conversation, _ = Conversation.objects.get_or_create(match=match)
     form = MessageForm(request.POST)
     if form.is_valid():
@@ -411,19 +477,23 @@ def inbox_send(request, match_id):
     return redirect('skillswap:inbox-detail', match_id=match.pk)
 
 
-
 class ExploreUserListView(LoginRequiredMixin, ListView):
     template_name = 'skillswap/explore_users.html'
     context_object_name = 'users'
     paginate_by = 12
 
     def get_queryset(self):
+        # Start from all users with related profile
         queryset = User.objects.select_related('profile').all()
+
+        # Remove current user and blocked users
         if self.request.user.is_authenticated:
             queryset = queryset.exclude(pk=self.request.user.pk)
             blocked_ids = blocked_user_ids(self.request.user)
             if blocked_ids:
                 queryset = queryset.exclude(pk__in=blocked_ids)
+
+        # Optional filters by skill name and skill type
         skill_query = self.request.GET.get('skill')
         skill_type = self.request.GET.get('type')
         if skill_query:
@@ -440,11 +510,15 @@ class ExploreUserListView(LoginRequiredMixin, ListView):
 
 @login_required
 def match_create(request, pk):
+    # Send a match invite for a request
     req = get_object_or_404(Request, pk=pk)
+
     if req.user == request.user:
         return HttpResponseForbidden('Cannot match your own request.')
+
     if is_blocked(request.user, req.user):
         return HttpResponseForbidden('Cannot send a match invite to this user.')
+
     if request.method == 'POST':
         form = MatchInviteForm(request.POST)
         if form.is_valid():
@@ -461,6 +535,7 @@ class MatchListView(LoginRequiredMixin, ListView):
     context_object_name = 'matches'
 
     def get_queryset(self):
+        # Show matches where current user is requester or partner
         user = self.request.user
         return Match.objects.filter(Q(requester=user) | Q(partner=user)).select_related('request')
 
@@ -471,6 +546,7 @@ class MatchDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'match'
 
     def get_object(self, queryset=None):
+        # Restrict match detail to its participants
         match = super().get_object(queryset)
         if self.request.user not in {match.requester, match.partner}:
             raise Http404
@@ -479,6 +555,8 @@ class MatchDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         match = self.object
+
+        # Show feedback and prepare feedback form if allowed
         context['feedback_entries'] = match.feedback.select_related('rater', 'ratee')
         existing_feedback = match.feedback.filter(rater=self.request.user).first()
         context['existing_feedback'] = existing_feedback
@@ -490,10 +568,12 @@ class MatchDetailView(LoginRequiredMixin, DetailView):
 
 @login_required
 def match_action(request, pk, action):
+    # Handle match state changes like accept, reject, complete
     match = get_object_or_404(Match, pk=pk)
     if request.user not in {match.requester, match.partner}:
         return HttpResponseForbidden('Not allowed.')
 
+    # Only the partner can accept or reject
     if action in {'accept', 'reject'} and request.user != match.partner:
         return HttpResponseForbidden('Only the recipient can respond.')
 
@@ -520,6 +600,7 @@ class RecommendationListView(LoginRequiredMixin, ListView):
     context_object_name = 'recommendations'
 
     def get_queryset(self):
+        # Get recommended partners based on current user's wanted skills
         return get_recommended_partners(
             user=self.request.user,
             q=self.request.GET.get('q'),
@@ -533,17 +614,22 @@ class RecommendationListView(LoginRequiredMixin, ListView):
         context['mode'] = self.request.GET.get('mode', '')
         return context
 
+
 @login_required
 def report_form(request):
+    # Generic report page that works for different model types
     ct_id = request.GET.get('ct')
     obj_id = request.GET.get('oid')
     if not ct_id or not obj_id:
         raise Http404
+
     content_type = get_object_or_404(ContentType, pk=ct_id)
     model_class = content_type.model_class()
     if model_class is None:
         raise Http404
+
     target = get_object_or_404(model_class, pk=obj_id)
+
     if request.method == 'POST':
         form = ReportForm(request.POST)
         if form.is_valid():
@@ -558,6 +644,7 @@ def report_form(request):
             return redirect(next_url)
     else:
         form = ReportForm()
+
     return render(
         request,
         'skillswap/report_form.html',
@@ -571,6 +658,7 @@ def report_form(request):
 
 @login_required
 def report_request(request, pk):
+    # Redirect to generic report form for a request
     req = get_object_or_404(Request, pk=pk)
     ct = ContentType.objects.get_for_model(Request)
     return redirect(f"{reverse_lazy('skillswap:report')}?ct={ct.pk}&oid={req.pk}")
@@ -578,6 +666,7 @@ def report_request(request, pk):
 
 @login_required
 def report_profile(request, username):
+    # Redirect to generic report form for a profile
     profile = get_object_or_404(Profile, user__username=username)
     ct = ContentType.objects.get_for_model(Profile)
     return redirect(f"{reverse_lazy('skillswap:report')}?ct={ct.pk}&oid={profile.pk}")
@@ -585,6 +674,7 @@ def report_profile(request, username):
 
 @login_required
 def report_message(request, pk):
+    # Redirect to generic report form for a message
     message = get_object_or_404(Message, pk=pk)
     ct = ContentType.objects.get_for_model(Message)
     return redirect(f"{reverse_lazy('skillswap:report')}?ct={ct.pk}&oid={message.pk}")
@@ -592,12 +682,14 @@ def report_message(request, pk):
 
 @login_required
 def my_reports(request):
+    # Show reports submitted by current user
     reports = Report.objects.filter(reporter=request.user).select_related('reported_user', 'content_type')
     return render(request, 'skillswap/my_reports.html', {'reports': reports})
 
 
 @user_passes_test(lambda u: u.is_staff)
 def moderation_reports(request):
+    # Staff-only page for reviewing open reports
     reports = Report.objects.filter(status__in=[Report.Status.OPEN, Report.Status.REVIEWING]).select_related(
         'reporter',
         'reported_user',
@@ -606,19 +698,24 @@ def moderation_reports(request):
     return render(request, 'skillswap/mod_reports.html', {'reports': reports})
 
 
-
 @login_required
 def feedback_create(request, pk):
+    # Create feedback for a completed match
     match = get_object_or_404(Match, pk=pk)
     if request.user not in {match.requester, match.partner}:
         return HttpResponseForbidden('Not allowed.')
+
     if match.status != Match.Status.COMPLETED:
         return HttpResponseForbidden('Match is not completed.')
+
+    # One feedback per user per match
     if Feedback.objects.filter(match=match, rater=request.user).exists():
         messages.info(request, 'You already left feedback for this match.')
         return redirect(match.get_absolute_url())
+
     if request.method != 'POST':
         return HttpResponse('Invalid method.')
+
     form = FeedbackForm(request.POST)
     if form.is_valid():
         feedback = form.save(commit=False)
@@ -631,7 +728,9 @@ def feedback_create(request, pk):
         messages.error(request, 'Please correct the feedback form.')
     return redirect(match.get_absolute_url())
 
+
 def _infer_reported_user(target):
+    # Try to figure out which user should be marked as reported
     if isinstance(target, Profile):
         return target.user
     if isinstance(target, Request):
@@ -644,6 +743,7 @@ def _infer_reported_user(target):
 
 
 def _safe_target_url(target):
+    # Return object URL if possible, otherwise go to dashboard
     if hasattr(target, "get_absolute_url"):
         try:
             return target.get_absolute_url()
@@ -652,8 +752,8 @@ def _safe_target_url(target):
     return reverse_lazy("skillswap:dashboard")
 
 
-
 def get_recommended_partners(user, q=None, mode=None, limit=None):
+    # Get skills the current user wants to learn
     want_skills = UserSkill.objects.filter(user=user, type=UserSkill.SkillType.WANT)
     if q:
         want_skills = want_skills.filter(skill__name__icontains=q)
@@ -661,16 +761,22 @@ def get_recommended_partners(user, q=None, mode=None, limit=None):
     if not want_skill_ids:
         return User.objects.none()
 
+    # Get skills the current user can offer
     offer_skill_ids = list(
         UserSkill.objects.filter(user=user, type=UserSkill.SkillType.OFFER).values_list('skill_id', flat=True)
     )
 
+    # Start building candidate user queryset
     qs = User.objects.select_related('profile').exclude(pk=user.pk)
     blocked_ids = blocked_user_ids(user)
     if blocked_ids:
         qs = qs.exclude(pk__in=blocked_ids)
+
+    # Optional filter by preferred learning mode
     if mode in {choice[0] for choice in Profile.PreferredMode.choices}:
         qs = qs.filter(profile__preferred_mode=mode)
+
+    # Count skill overlap between current user and possible partners
     qs = qs.annotate(
         overlap_want_offer=Count(
             'user_skills__skill',
@@ -690,10 +796,12 @@ def get_recommended_partners(user, q=None, mode=None, limit=None):
         ),
     ).filter(overlap_want_offer__gt=0)
 
+    # Final score combines direct matches and mutual learning interest
     qs = qs.annotate(
         final_score=F('overlap_want_offer') + F('mutual_overlap'),
     )
 
+    # Prefetch only matching offered skills to display later
     qs = qs.prefetch_related(
         Prefetch(
             'user_skills',

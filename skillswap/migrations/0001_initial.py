@@ -5,13 +5,16 @@ from django.db.models import Q
 
 
 class Migration(migrations.Migration):
+    # This is the first migration for the app
     initial = True
 
+    # Depend on the user model so foreign keys can be created correctly
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
+        # Profile model stores extra user information
         migrations.CreateModel(
             name='Profile',
             fields=[
@@ -28,11 +31,14 @@ class Migration(migrations.Migration):
                 ),
                 ('location', models.CharField(blank=True, max_length=120)),
                 (
+                    # One user has one profile
                     'user',
                     models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
                 ),
             ],
         ),
+
+        # Skill model stores all available skills in the system
         migrations.CreateModel(
             name='Skill',
             fields=[
@@ -42,10 +48,14 @@ class Migration(migrations.Migration):
                 ('description', models.TextField(blank=True)),
             ],
             options={
+                # Show skills in alphabetical order
                 'ordering': ['name'],
+                # Avoid duplicate skill names in the same category
                 'unique_together': {('name', 'category')},
             },
         ),
+
+        # Request model represents a user's help request
         migrations.CreateModel(
             name='Request',
             fields=[
@@ -63,20 +73,25 @@ class Migration(migrations.Migration):
                 ),
                 ('preferred_time', models.CharField(blank=True, max_length=120)),
                 (
+                    # Each request is linked to one skill
                     'skill',
                     models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='requests',
                                       to='skillswap.skill'),
                 ),
                 (
+                    # The user who created the request
                     'user',
                     models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='requests',
                                       to=settings.AUTH_USER_MODEL),
                 ),
             ],
             options={
+                # Newest requests appear first
                 'ordering': ['-created_at'],
             },
         ),
+
+        # UserSkill connects users with skills they offer or want
         migrations.CreateModel(
             name='UserSkill',
             fields=[
@@ -91,11 +106,13 @@ class Migration(migrations.Migration):
                 ),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 (
+                    # Skill connected to this user-skill record
                     'skill',
                     models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='user_skills',
                                       to='skillswap.skill'),
                 ),
                 (
+                    # User connected to this user-skill record
                     'user',
                     models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='user_skills',
                                       to=settings.AUTH_USER_MODEL),
@@ -105,6 +122,8 @@ class Migration(migrations.Migration):
                 'ordering': ['-created_at'],
             },
         ),
+
+        # Match model stores matching records between requester and partner
         migrations.CreateModel(
             name='Match',
             fields=[
@@ -125,16 +144,19 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 (
+                    # The user who may help with the request
                     'partner',
                     models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='partner_matches',
                                       to=settings.AUTH_USER_MODEL),
                 ),
                 (
+                    # The request being matched
                     'request',
                     models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='matches',
                                       to='skillswap.request'),
                 ),
                 (
+                    # The user who created the original request
                     'requester',
                     models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='requested_matches',
                                       to=settings.AUTH_USER_MODEL),
@@ -144,15 +166,21 @@ class Migration(migrations.Migration):
                 'ordering': ['-created_at'],
             },
         ),
+
+        # Prevent duplicate user-skill-type combinations
         migrations.AddConstraint(
             model_name='userskill',
             constraint=models.UniqueConstraint(fields=('user', 'skill', 'type'), name='unique_user_skill_type'),
         ),
+
+        # Make sure a user cannot match with themselves
         migrations.AddConstraint(
             model_name='match',
             constraint=models.CheckConstraint(condition=~Q(requester=models.F('partner')),
                                               name='requester_not_partner'),
         ),
+
+        # Only one pending match is allowed for the same request/requester/partner
         migrations.AddConstraint(
             model_name='match',
             constraint=models.UniqueConstraint(
